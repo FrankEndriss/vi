@@ -50,6 +50,8 @@
 
 	<build>
 		<finalName>vi##${build.timestamp}</finalName>
+		
+		<!--  TODO pack as one big jar, add ViApplication as main class to manifest. -->
 <!--
 		<plugins>
 			<plugin>
