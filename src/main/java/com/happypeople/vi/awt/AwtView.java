@@ -6,9 +6,8 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.Graphics;
-import java.awt.Panel;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
 
 import com.happypeople.vi.LinesModel;
 import com.happypeople.vi.LinesModel.LinesModelChangedEvent;
@@ -21,54 +20,34 @@ public class AwtView implements View {
 	/** Blinking frequency of cursor */
 	private final static long C_BLINK_MILLIES=500;
 	private final static Color C_COLOR=Color.RED;
-	private final static int C_WIDTH=13;
 
 	private final LinesModel linesModel;
 	private final Component paintingArea;
 	
-	/** current cursor position X */
+	/** current cursor position X in lines/cols, not pixels */
 	private int cPosX=0;
-	/** current cursor position Y */
+	/** current cursor position Y in lines/cols, not pixels */
 	private int cPosY=0;
 	/** Timestamp blinking cursor was set to visible state (happens on every cursor movement) */
 	private long cTime=System.currentTimeMillis();
 	/** Timestamp until that the cursor thread should wait before triggering a repaint. */
 	private long nextWakeup=cTime+C_BLINK_MILLIES;
 	
-	public AwtView(LinesModel linesModel) {
+	/**
+	 * @param linesModel the data to display on screen
+	 * @param keyListener listener which gets the input events
+	 */
+	public AwtView(LinesModel linesModel, KeyListener keyListener) {
 		this.linesModel=linesModel;
 
 		final Frame frame=new Frame("vi");
 		
-		frame.addWindowListener(new WindowAdapter() {
-
-			public void windowClosing(WindowEvent e) {
-				// TODO ask to save current file if needed
-				frame.dispose();
-			}
-
-			public void windowClosed(WindowEvent e) {
-				System.exit(0);
-			}
-
-			public void windowIconified(WindowEvent e) {
-				// TODO stop blinking cursor
-			}
-
-			public void windowDeiconified(WindowEvent e) {
-				// TODO start blinking cursor
-			}
-
-			public void windowActivated(WindowEvent e) {
-				// TODO start cursor blinking
-			}
-
-			public void windowDeactivated(WindowEvent e) {
-				// TODO stop blinking cursor
-			}
-		});
+		frame.addWindowListener(new CloseTheWindowListener(frame));
 
 		frame.add(paintingArea=new AwtViewPanel());
+
+		// add the listener for keyboard events
+		frame.addKeyListener(keyListener);
 
 		// the cursor thread, sleeps until nextWakeup, then repaints and increments nextWakeup by C_BLINK_MILLIES
 		new Thread() {
@@ -99,7 +78,11 @@ public class AwtView implements View {
 	 */
 	private class AwtViewPanel extends Component {
 		private final Font font=new Font("monospaced", Font.PLAIN, 15);
-		public void paint(Graphics g) {
+		public void paint(Graphics gBase) {
+			final long callStart=System.currentTimeMillis();
+			final BufferedImage offImage=new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+			final Graphics g=offImage.createGraphics();
+			
 			g.setFont(font);
 			final FontMetrics fm=g.getFontMetrics(font);
 			int lineNo=0;
@@ -143,9 +126,6 @@ public class AwtView implements View {
 						final String rightStr=str.substring(cPosX+1);
 						g.drawString(rightStr, cursorXoffset+cursorWidth, baselinePx-fm.getDescent());
 					}
-					//g.setColor(Color.red);
-					//g.drawRect(cPosX*15, baselinePx-lineHeight, 15, lineHeight);
-					//System.out.println("drawing cursor at: "+(cPosX*15)+", "+(baselinePx-lineHeight)+", 15, "+lineHeight);
 				} else {
 					// simply draw the line string
 					g.drawString(str, 0, baselinePx-fm.getDescent());
@@ -153,6 +133,8 @@ public class AwtView implements View {
 
 				lineNo++;
 			}
+			gBase.drawImage(offImage, 0, 0, null);
+			System.out.println("paint "+callStart+" in "+(System.currentTimeMillis()-callStart)+"ms");
 		}
 	}
 
@@ -170,6 +152,7 @@ public class AwtView implements View {
 		resetCTime();
 		cPosX=evt.getX();
 		cPosY=evt.getY();
+		// TODO repaint only the cursor
 		paintingArea.repaint();
 	}
 

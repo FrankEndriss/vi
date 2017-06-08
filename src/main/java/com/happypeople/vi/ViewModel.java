@@ -28,10 +28,10 @@ public interface ViewModel {
 	 */
 	public void setFirstLine(long firstLine);
 
-     // generic ViewModel events
-     interface ViewModelChangeEvent {
-    	 // empty
-     }
+	// generic ViewModel events
+	interface ViewModelChangeEvent {
+		// empty
+	}
 
      /** scroll the whole window */
      interface FirstLineChangedEvent extends ViewModelChangeEvent {

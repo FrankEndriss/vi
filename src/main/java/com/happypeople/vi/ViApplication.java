@@ -22,12 +22,15 @@ public class ViApplication {
 		linesModel.insertAfter(2, "");
 		linesModel.insertAfter(3, "last (fifth) line");
 
-		final View view=new AwtView(linesModel);
-
 		final ViewModel viewModel=new SimpleViewModelImpl(80, 20, linesModel);
+		final KeyTypedController controller=new ViController(linesModel, viewModel);
+		final View view=new AwtView(linesModel, controller);
+
 		
 		linesModel.addLinesModelChangedEventListener(view);
 		viewModel.addCursorPositionChangedEventListener(view);
 		viewModel.addFirstLineChangedEventListener(view);
+		
+
 	}
 }
