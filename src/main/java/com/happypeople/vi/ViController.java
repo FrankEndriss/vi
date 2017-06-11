@@ -1,17 +1,29 @@
 package com.happypeople.vi;
 
 import java.awt.event.KeyEvent;
+import java.util.concurrent.BlockingQueue;
 
 public class ViController implements KeyTypedController {
 	private Mode mode=Mode.VI_MODE;
 	private final LinesModel linesModel;
-	private final ViewModel viewModel;
+	private final CursorModel viewModel;
 	
 	private ModeStrategy inputModeStrategy=new ModeStrategy_VI_MODE();
 
-	public ViController(LinesModel linesModel, ViewModel viewModel) {
+	public ViController(LinesModel linesModel, CursorModel viewModel) {
 		this.linesModel=linesModel;
 		this.viewModel=viewModel;
+	}
+
+	public void processInput(final BlockingQueue<KeyEvent> inputQueue) {
+		while(true) {
+			try {
+				final KeyEvent evt=inputQueue.take();
+				keyTyped(evt);
+			}catch(Exception e) {
+				e.printStackTrace(System.err);
+			}
+		}
 	}
 
 	public void keyTyped(KeyEvent e) {
@@ -20,15 +32,6 @@ public class ViController implements KeyTypedController {
 
 	public void addModeChangedEventListener(ModeChangedEventListener listener) {
 		// TODO Auto-generated method stub
-	}
-
-	
-	public void keyPressed(KeyEvent e) {
-		// ignore, use keyTyped()
-	}
-
-	public void keyReleased(KeyEvent e) {
-		// ignore, use keyTyped()
 	}
 
 	private static interface ModeStrategy {

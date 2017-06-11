@@ -2,7 +2,7 @@ package com.happypeople.vi;
 
 public class LinesModelBuilder {
 
-	public static LinesModel createEmpty() {
+	public static LinesModelEditor createEmpty() {
 		return new LinesModelImpl();
 	}
 

@@ -7,7 +7,7 @@ import org.apache.commons.collections4.list.TreeList;
 
 /** Implementation of LinesModel based on apache commons TreeList
  */
-public class LinesModelImpl implements LinesModel {
+public class LinesModelImpl implements LinesModelEditor {
 	private final TreeList<String> content=new TreeList<String>();
 	private final Set<LinesModelChangedEventListener> listeners=new HashSet<LinesModelChangedEventListener>();
 
@@ -18,52 +18,31 @@ public class LinesModelImpl implements LinesModel {
 
 //	@Override
 	public String get(long lineNo) {
-		// TODO check index
 		return content.get((int)lineNo);
 	}
 
 //	@Override
 	public void replace(final long lineNo, final String newVersionOfLine) {
-		// TODO check index
 		content.set((int)lineNo, newVersionOfLine);
-		fireChange(new LinesModelLineChangedEvent() {
-			public long getLineNo() {
-				return lineNo;
-			}
-		});
+		fireChange(new MyLinesModelChangedEvent(lineNo, LinesModelChangeType.CHANGE));
 	}
 
 //	@Override
 	public void insertAfter(final long lineNo, final String newLine) {
-		// TODO check index
 		content.add((int)lineNo+1, newLine);
-		fireChange(new LinesModelLineInsertedEvent() {
-			public long getLineNo() {
-				return lineNo;
-			}
-		});
+		fireChange(new MyLinesModelChangedEvent(lineNo+1, LinesModelChangeType.INSERT));
 	}
 
 //	@Override
 	public void insertBefore(final long lineNo, String newLine) {
-		// TODO check index
 		content.add((int)lineNo, newLine);
-		fireChange(new LinesModelLineInsertedEvent() {
-			public long getLineNo() {
-				return lineNo;
-			}
-		});
+		fireChange(new MyLinesModelChangedEvent(lineNo, LinesModelChangeType.INSERT));
 	}
 
 //	@Override
 	public void remove(final long lineNo) {
 		content.remove((int)lineNo);
-		// TODO check index
-		fireChange(new LinesModelLineRemovedEvent() {
-			public long getLineNo() {
-				return lineNo;
-			}
-		});
+		fireChange(new MyLinesModelChangedEvent(lineNo, LinesModelChangeType.REMOVE));
 	}
 
 //	@Override
@@ -74,6 +53,26 @@ public class LinesModelImpl implements LinesModel {
 	protected void fireChange(final LinesModelChangedEvent evt) {
 		for(LinesModelChangedEventListener listener : listeners) {
 			listener.changedEvent(evt);
+		}
+	}
+	
+	/** Event implementation used in this implementation of the LinesModel
+	 */
+	private static class MyLinesModelChangedEvent implements LinesModelChangedEvent {
+		private final long lineNo;
+		private final LinesModelChangeType changeType;
+
+		MyLinesModelChangedEvent(long lineNo, LinesModelChangeType changeType) {
+			this.lineNo=lineNo;
+			this.changeType=changeType;
+		}
+
+		public long getLineNo() {
+			return lineNo;
+		}
+
+		public LinesModelChangeType getChangeType() {
+			return changeType;
 		}
 	}
 }

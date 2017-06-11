@@ -1,0 +1,39 @@
+----------------------------------------------------------------------------------------
+pom.xml packaging fat jar with main class in manifest
+----------------------------------------------------------------------------------------
+Änderungen in der Größe des GUI-Fensters sollen/m�ssen sich auf die grö´e des
+View-Bereiches auswirken.
+Dabei ist ggf auf die Änderung der Größe des Buffer-Images zu be�rcksichtigen.
+----------------------------------------------------------------------------------------
+Mehrzeilige Darstellung von Zeilen l�nger als die Fensterbreite.
+----------------------------------------------------------------------------------------
+command line mode instead of awt window
+----------------------------------------------------------------------------------------
+
+****************************************************************************************
+*************************************** DONE *******************************************
+****************************************************************************************
+----------------------------------------------------------------------------------------
+done 2017-06-11 (
+Double buffering, Application Thread
+S�mtlicher Keyboard-Input soll als KeyEvent in eine Input-Queue geschrieben werden.
+Der ViController liesst dann in einem separaten Application-Thread aus eben dieser Queue,
+und erzeugt somit alle Model-Changes im Application-Thread.
+Der AwtView, also der Listener aller Model-Objekte, Rendert diese Model-Changes dann in
+ein Buffer-Image.
+Nach jeder solcher Render-Aktion wird repaint(clip_area) aufgerufen.
+Die paint(Graphics g) -Methode der Component kopiert dann nur noch den clip-Bereich
+aus dem Buffer-Image in den Graphics-Context g.
+
+Als Application-Thread kann ggf der MainThread verwendet werden.
+Notwendig ist warscheinlich auch eine Synchronisation der Zugriffe auf das Buffer-Image.
+
+2017-06-10
+* der erhoffte Effekte, das es nicht mehr flackert, ist nicht eingetreten.
+* aber, es wird nach wie vor bei jedem repaint _alle_ neu gezeichnet, mgl besseres
+  Verhalten wenn optimiert gerendert wird, insbesondere auch der Cursor.
+
+2017-06-11
+Inzwischen wurde umgestellt auf Swing anstatt AWT, damit kein Flickern mehr.
+----------------------------------------------------------------------------------------
+

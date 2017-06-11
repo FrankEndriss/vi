@@ -1,12 +1,14 @@
 package com.happypeople.vi;
 
+import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.concurrent.BlockingQueue;
 
 /** This models the controller part.
  * Main function is to parse the input and take appropriate actions.
  * Input is sent by extended interface java.awt.KeyListener
  */
-public interface KeyTypedController extends KeyListener {
+public interface KeyTypedController { //extends KeyListener {
     enum Mode {
         /** hit <Esc> to enter vi mode */
         VI_MODE,
@@ -32,4 +34,6 @@ public interface KeyTypedController extends KeyListener {
      */
     void addModeChangedEventListener(ModeChangedEventListener listener);
 
+    /** Reads input from inputQueue until null reference is found, ie the queue is kind of closed. */
+    void processInput(BlockingQueue<KeyEvent> inputQueue);
 }
