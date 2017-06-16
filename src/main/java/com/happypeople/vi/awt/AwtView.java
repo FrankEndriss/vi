@@ -154,7 +154,7 @@ public class AwtView implements View {
 		
 		@Override
 		public void paint(final Graphics g) {
-			System.out.println("in paint(G)");
+			//System.out.println("in paint(G)");
 			super.paint(g);
 			final Rectangle clip=g.getClipBounds();
 			screenBuffer.paint(g, clip.x, clip.y, clip.x+clip.width, clip.y+clip.height);

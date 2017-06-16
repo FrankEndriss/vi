@@ -52,10 +52,26 @@ System.out.println("moveCursorUp, lines="+lines);
 		fireCursorPosition(cPosX, cPosY);
 	}
 
+	/* We need to make sure that the cursor position does not move "out-of-range",
+	 * this is not left of the beginning of the line, and not right of the end of the line.
+	 * @see com.happypeople.vi.CursorModel#moveCursorLeft(int)
+	 */
 	public void moveCursorLeft(final int chars) {
-		cPosX-=chars;
-		if(cPosX<0)
-			cPosX=0;
+		int newPosX=cPosX-chars;
+		if(newPosX<0)
+			newPosX=0;
+		else {
+			long[] modelPos=new long[2];
+			viewModel.getModelPositionFromCursorPosition(newPosX, cPosY, modelPos);
+			final String line=linesModel.get(modelPos[1]);
+			System.out.println("line under cursor: "+line);
+			if(newPosX>line.length()-1)
+				newPosX=line.length()-1;
+			if(newPosX<0)
+				newPosX=0;
+		}
+		
+		cPosX=newPosX;
 		fireCursorPosition(cPosX, cPosY);
 	}
 	
