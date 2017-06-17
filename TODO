@@ -1,5 +1,12 @@
+
 ----------------------------------------------------------------------------------------
 pom.xml packaging fat jar with main class in manifest
+Eventuell doch ein spring-boot... nochmal probieren, ob ein einfaches HelloWorld
+nicht doch irgendwie funktioniert.
+2017-06-17 DONE
+
+Jetzt noch die App Initialisierung springifizieren, d.h. alle Componenten
+als Beans defineren, und injecten.
 ----------------------------------------------------------------------------------------
 Änderungen in der Größe des GUI-Fensters sollen/m�ssen sich auf die grö´e des
 View-Bereiches auswirken.

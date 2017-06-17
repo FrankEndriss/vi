@@ -2,19 +2,24 @@ package com.happypeople.vi;
 
 import java.awt.event.KeyEvent;
 import java.util.Arrays;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import com.happypeople.vi.awt.AwtView;
 
 //import org.springframework.boot.SpringApplication;
 //import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-//@SpringBootApplication
+@SpringBootApplication
 public class ViApplication {
 	public static void main(String[] args) {
-		//SpringApplication.run(ViApplication.class, args);
+		final ConfigurableApplicationContext context=
+				new SpringApplicationBuilder(ViApplication.class).headless(false).run(args);
+
 		System.out.println("args: "+Arrays.asList(args));
 		
 		// TODO parse args
