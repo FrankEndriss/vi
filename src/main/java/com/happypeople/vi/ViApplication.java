@@ -5,40 +5,51 @@ import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import com.happypeople.vi.awt.AwtView;
+import com.happypeople.vi.awt.AwtViewFactory;
 
 //import org.springframework.boot.SpringApplication;
 //import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class ViApplication {
+	private final static Logger log=LoggerFactory.getLogger(ViApplication.class);
+	
 	public static void main(String[] args) {
 		final ConfigurableApplicationContext context=
 				new SpringApplicationBuilder(ViApplication.class).headless(false).run(args);
 
 		System.out.println("args: "+Arrays.asList(args));
 		
+		final AwtViewFactory awtViewFactory=context.getBean(AwtViewFactory.class);
+		final LinesModelFactory linesModelFactory=context.getBean(LinesModelFactory.class);
+		final ViewModelFactory viewModelFactory=context.getBean(ViewModelFactory.class);
+		final CursorModelFactory cursorModelFactory=context.getBean(CursorModelFactory.class);
+
+		// TODO springify
+		final BlockingQueue<KeyEvent> inputQueue=new LinkedBlockingQueue<KeyEvent>();
+
 		// TODO parse args
 		
-		final LinesModelEditor linesModel=LinesModelBuilder.createEmpty();
+		final LinesModelEditor linesModel=linesModelFactory.createEmpty();
+		log.info("linesModel="+linesModel);
 		linesModel.insertBefore(0, "firstLine");
 		linesModel.insertAfter(0, "secondLine");
 		linesModel.insertAfter(1, "thirdLine is longer...and next is an empty line");
 		linesModel.insertAfter(2, "");
 		linesModel.insertAfter(3, "last (fifth) line");
 
-		final ViewModel viewModel=new SimpleViewModelImpl(80, 20, linesModel);
-		final CursorModel cursorModel=new CursorModelImpl(linesModel, viewModel);
-		
-		final BlockingQueue<KeyEvent> inputQueue=new LinkedBlockingQueue<KeyEvent>();
+		final View view= awtViewFactory.createAwtView(linesModel, inputQueue);
 
-		final KeyTypedController controller=new ViController(linesModel, cursorModel);
-		final View view=new AwtView(linesModel, inputQueue);
-		
+		final ViewModel viewModel=viewModelFactory.createViewModel(linesModel);
+		final CursorModel cursorModel=cursorModelFactory.createCursorModel(linesModel, viewModel);
+		final KeyTypedController controller=context.getBean(ViController.class, linesModel, cursorModel);
+
 		linesModel.addLinesModelChangedEventListener(view);
 		cursorModel.addCursorPositionChangedEventListener(view);
 		viewModel.addFirstLineChangedEventListener(view);
@@ -47,4 +58,5 @@ public class ViApplication {
 		controller.processInput(inputQueue);
 
 	}
+
 }

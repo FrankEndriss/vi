@@ -3,16 +3,28 @@ package com.happypeople.vi;
 import java.awt.event.KeyEvent;
 import java.util.concurrent.BlockingQueue;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+/** Implementation of a vi controller.
+ * It takes input (most likely from the keyboard) and triggers appropriate actions
+ * on the data models. 
+ * The affected models are a LinesModelEditor and a CursorModel.
+ * Additionally one can add a listener to be called when the editor mode
+ * changes, like from command mode to edit mode.
+ */
+@Component
+@Scope("prototype")
 public class ViController implements KeyTypedController {
 	private Mode mode=Mode.VI_MODE;
-	private final LinesModel linesModel;
-	private final CursorModel viewModel;
+	private final LinesModelEditor linesModel;
+	private final CursorModel cursorModel;
 	
 	private ModeStrategy inputModeStrategy=new ModeStrategy_VI_MODE();
 
-	public ViController(LinesModel linesModel, CursorModel viewModel) {
+	public ViController(final LinesModelEditor linesModel, final CursorModel cursorModel) {
 		this.linesModel=linesModel;
-		this.viewModel=viewModel;
+		this.cursorModel=cursorModel;
 	}
 
 	public void processInput(final BlockingQueue<KeyEvent> inputQueue) {
@@ -49,10 +61,10 @@ public class ViController implements KeyTypedController {
 			final char c=keyEvent.getKeyChar();
 			switch(c)  {
 				// Simple cursor movement
-				case 'h':	viewModel.moveCursorLeft(1); break;
-				case 'j':	viewModel.moveCursorUp(-1); break;
-				case 'k':	viewModel.moveCursorUp(1); break;
-				case 'l':	viewModel.moveCursorLeft(-1); break;
+				case 'h':	cursorModel.moveCursorLeft(1); break;
+				case 'j':	cursorModel.moveCursorUp(-1); break;
+				case 'k':	cursorModel.moveCursorUp(1); break;
+				case 'l':	cursorModel.moveCursorLeft(-1); break;
 				default: System.out.println("ignored keyTyped: "+keyEvent);
 			}
 			return this;

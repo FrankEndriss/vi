@@ -3,6 +3,11 @@ package com.happypeople.vi;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component
+@Scope("prototype")
 public class CursorModelImpl implements CursorModel {
 	private final Set<CursorPositionChangedEventListener> cpceListeners=new HashSet<CursorPositionChangedEventListener>();
 
@@ -16,7 +21,7 @@ public class CursorModelImpl implements CursorModel {
 	private final LinesModel linesModel;
 	private final ViewModel viewModel;
 	
-	public CursorModelImpl(LinesModel linesModel, ViewModel viewModel) {
+	public CursorModelImpl(final LinesModel linesModel, final ViewModel viewModel) {
 		this.linesModel=linesModel;
 		this.viewModel=viewModel;
 	}
@@ -28,7 +33,6 @@ public class CursorModelImpl implements CursorModel {
 	}
 
 	public void moveCursorUp(final int lines) {
-System.out.println("moveCursorUp, lines="+lines);
 		// number of lines we need to scroll up
 		final int scrollUpLines=lines>cPosY?lines-cPosY:0;
 		if(scrollUpLines>0) {

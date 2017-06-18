@@ -1,12 +1,11 @@
 package com.happypeople.vi;
 
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.concurrent.BlockingQueue;
 
 /** This models the controller part.
  * Main function is to parse the input and take appropriate actions.
- * Input is sent by extended interface java.awt.KeyListener
+ * Input is accepted synchronously through the call of processInput(inputQueue)
  */
 public interface KeyTypedController { //extends KeyListener {
     enum Mode {

@@ -3,9 +3,14 @@ package com.happypeople.vi;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 /** Simple implementation.
  * Fixed Size window
  */
+@Component
+@Scope("prototype")
 public class SimpleViewModelImpl implements ViewModel {
 
 	/** underlying data model */

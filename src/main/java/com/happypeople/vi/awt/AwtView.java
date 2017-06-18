@@ -1,26 +1,27 @@
 package com.happypeople.vi.awt;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import com.happypeople.vi.CursorModel.CursorPositionChangedEvent;
 import com.happypeople.vi.LinesModel;
@@ -39,15 +40,18 @@ import com.happypeople.vi.ViewModel.FirstLineChangedEvent;
  * one big Rectrangle, which leads to that we can simply use getClip() of the component, by
  * Component.repaint(x, y, w, h);
  */
+@Component
+@Scope("prototype")
 public class AwtView implements View {
+	final static Logger log=LoggerFactory.getLogger(AwtView.class);
 	
 	/** Blinking frequency of cursor */
-	private final static long C_BLINK_MILLIES=500;
+	private final static long C_BLINK_MILLIES=2000;
 	/** Color of the cursor */
 	private final static Color C_COLOR=Color.RED;
 
 	private final LinesModel linesModel;
-	private final Component paintingArea;
+	private final JComponent paintingArea;
 	
 	private final Set<ViewSizeChangedEventListener> viewSizeChangedEventListeners=new HashSet<ViewSizeChangedEventListener>();
 	
@@ -63,11 +67,12 @@ public class AwtView implements View {
 	
 	private ScreenBuffer screenBuffer=new ScreenBuffer();
 
-	/**
+	/** TODO add a "addKeyEventListener(...)" method, to get rid of the
+	 * constructor arg keyEventTarget.
 	 * @param linesModel the data to display on screen
-	 * @param keyListener listener which gets the input events
+	 * @param keyEventTarget queue where key events are added, should be removed, and wired on the caller side
 	 */
-	public AwtView(final LinesModel linesModel, final BlockingQueue<KeyEvent> inputQueue) {
+	public AwtView(final LinesModel linesModel, final BlockingQueue<KeyEvent> keyEventTarget) {
 		// some special hook
 		System.setProperty("sun.awt.noerasebackground", "true");
 
@@ -86,7 +91,7 @@ public class AwtView implements View {
 		paintingArea.addComponentListener(new ComponentListener() {
 
 			public void componentResized(ComponentEvent e) {
-				final Component c=e.getComponent();
+				final java.awt.Component c=e.getComponent();
 				screenBuffer.resize(c.getWidth(), c.getHeight());
 				fireViewSizeChanged(screenBuffer.getSizeColumns(), screenBuffer.getSizeLines());
 			}
@@ -96,11 +101,11 @@ public class AwtView implements View {
 			}
 
 			public void componentShown(ComponentEvent e) {
-				System.out.println("component shown");
+				log.info("component shown");
 			}
 
 			public void componentHidden(ComponentEvent e) {
-				System.out.println("component hidden");
+				log.info("component hidden");
 			}
 		});
 
@@ -108,7 +113,7 @@ public class AwtView implements View {
 		frame.addKeyListener(new KeyListener() {
 
 			public void keyTyped(KeyEvent e) {
-				inputQueue.offer(e);
+				keyEventTarget.offer(e);
 			}
 
 			public void keyPressed(KeyEvent e) {
@@ -123,7 +128,7 @@ public class AwtView implements View {
 		});
 
 		// the cursor thread, sleeps until nextWakeup, then repaints and increments nextWakeup by C_BLINK_MILLIES
-		new Thread() {
+		Thread t=new Thread() {
 			public void run() {
 				while(true) {
 					final long current=System.currentTimeMillis();
@@ -135,11 +140,14 @@ public class AwtView implements View {
 						}
 					} else {
 						nextWakeup+=C_BLINK_MILLIES;
+						// TODO call screenBuffer.cursorRender() to do optimized rendering
 						screenBuffer.render();
 					}
 				}
 			}
-		}.start();
+		};
+		t.setDaemon(true);
+		t.start();
 		
 		frame.setSize(400, 400);
 		frame.setLocation(100, 100);
@@ -154,7 +162,6 @@ public class AwtView implements View {
 		
 		@Override
 		public void paint(final Graphics g) {
-			//System.out.println("in paint(G)");
 			super.paint(g);
 			final Rectangle clip=g.getClipBounds();
 			screenBuffer.paint(g, clip.x, clip.y, clip.x+clip.width, clip.y+clip.height);
@@ -178,6 +185,7 @@ public class AwtView implements View {
 		private int sizeLines=0;
 		
 		public void resize(final int width, final int height) {
+			log.info("resize, width="+width+" height="+height);
 			final BufferedImage newImage=new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 			final Graphics2D g=newImage.createGraphics();
 			g.setColor(COLOR_BACKGROUND);
@@ -215,6 +223,7 @@ public class AwtView implements View {
 		}
 
 		public void render() {
+			log.info("render(), linesModel="+linesModel);
 
 			// TODO synchronize
 			
@@ -229,6 +238,7 @@ public class AwtView implements View {
 			int lineHeight=fm.getHeight()+fm.getDescent();
 			
 			// TODO optimize to draw only what is inside g.getClipBounds();
+			log.info("linesModel.getSize(): "+linesModel.getSize());
 
 			while(baselinePx<image.getHeight() && lineNo<linesModel.getSize()) {
 				baselinePx+=lineHeight;
@@ -279,7 +289,6 @@ public class AwtView implements View {
 
 				lineNo++;
 			}
-			//System.out.println("paint "+callStart+" in "+(System.currentTimeMillis()-callStart)+"ms");
 			// trigger repaint int AWT-Thread
 			paintingArea.repaint();
 		}
@@ -291,7 +300,6 @@ public class AwtView implements View {
 		public int getSizeColumns() {
 			return sizeColumns;
 		}
-
 
 	}
 
@@ -311,7 +319,7 @@ public class AwtView implements View {
 		cPosX=evt.getScreenX();
 		cPosY=evt.getScreenY();
 		// TODO repaint only the cursor
-		System.out.println("new cursor position, x="+cPosX+", y="+cPosY);
+		log.info("new cursor position, x="+cPosX+", y="+cPosY);
 		screenBuffer.render();
 	}
 

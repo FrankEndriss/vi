@@ -4,48 +4,56 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.collections4.list.TreeList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /** Implementation of LinesModel based on apache commons TreeList
  */
+@Component
+@Scope("prototype")
 public class LinesModelImpl implements LinesModelEditor {
+	private final static Logger log=LoggerFactory.getLogger(LinesModelImpl.class);
+
 	private final TreeList<String> content=new TreeList<String>();
 	private final Set<LinesModelChangedEventListener> listeners=new HashSet<LinesModelChangedEventListener>();
 
-//	@Override
+	@Override
 	public long getSize() {
 		return content.size();
 	}
 
-//	@Override
+	@Override
 	public String get(long lineNo) {
 		return content.get((int)lineNo);
 	}
 
-//	@Override
+	@Override
 	public void replace(final long lineNo, final String newVersionOfLine) {
 		content.set((int)lineNo, newVersionOfLine);
 		fireChange(new MyLinesModelChangedEvent(lineNo, LinesModelChangeType.CHANGE));
 	}
 
-//	@Override
+	@Override
 	public void insertAfter(final long lineNo, final String newLine) {
 		content.add((int)lineNo+1, newLine);
 		fireChange(new MyLinesModelChangedEvent(lineNo+1, LinesModelChangeType.INSERT));
 	}
 
-//	@Override
+	@Override
 	public void insertBefore(final long lineNo, String newLine) {
 		content.add((int)lineNo, newLine);
 		fireChange(new MyLinesModelChangedEvent(lineNo, LinesModelChangeType.INSERT));
 	}
 
-//	@Override
+	@Override
 	public void remove(final long lineNo) {
 		content.remove((int)lineNo);
 		fireChange(new MyLinesModelChangedEvent(lineNo, LinesModelChangeType.REMOVE));
 	}
 
-//	@Override
+	@Override
 	public void addLinesModelChangedEventListener(LinesModelChangedEventListener listener) {
 		listeners.add(listener);
 	}
@@ -58,11 +66,11 @@ public class LinesModelImpl implements LinesModelEditor {
 	
 	/** Event implementation used in this implementation of the LinesModel
 	 */
-	private static class MyLinesModelChangedEvent implements LinesModelChangedEvent {
+	private final static class MyLinesModelChangedEvent implements LinesModelChangedEvent {
 		private final long lineNo;
 		private final LinesModelChangeType changeType;
 
-		MyLinesModelChangedEvent(long lineNo, LinesModelChangeType changeType) {
+		MyLinesModelChangedEvent(final long lineNo, final LinesModelChangeType changeType) {
 			this.lineNo=lineNo;
 			this.changeType=changeType;
 		}

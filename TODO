@@ -1,13 +1,5 @@
 
 ----------------------------------------------------------------------------------------
-pom.xml packaging fat jar with main class in manifest
-Eventuell doch ein spring-boot... nochmal probieren, ob ein einfaches HelloWorld
-nicht doch irgendwie funktioniert.
-2017-06-17 DONE
-
-Jetzt noch die App Initialisierung springifizieren, d.h. alle Componenten
-als Beans defineren, und injecten.
-----------------------------------------------------------------------------------------
 √Ñnderungen in der Gr√∂√üe des GUI-Fensters sollen/m√ssen sich auf die gr√∂¬¥e des
 View-Bereiches auswirken.
 Dabei ist ggf auf die √Ñnderung der Gr√∂√üe des Buffer-Images zu beºrcksichtigen.
@@ -15,11 +7,41 @@ Dabei ist ggf auf die √Ñnderung der Gr√∂√üe des Buffer-Images zu beºrcksichtigen
 Mehrzeilige Darstellung von Zeilen l√nger als die Fensterbreite.
 ----------------------------------------------------------------------------------------
 command line mode instead of awt window
+may be: https://github.com/mabe02/lanterna/blob/master/docs/tutorial/Tutorial01.md
+lanterna implements an interface named "Terminal" in several ways, which could
+work for this project.
 ----------------------------------------------------------------------------------------
 
 ****************************************************************************************
 *************************************** DONE *******************************************
 ****************************************************************************************
+----------------------------------------------------------------------------------------
+done 2017-06-18
+Spring-Initialisierung
+pom.xml packaging fat jar with main class in manifest
+Eventuell doch ein spring-boot... nochmal probieren, ob ein einfaches HelloWorld
+nicht doch irgendwie funktioniert.
+2017-06-17 DONE
+
+Jetzt noch die App Initialisierung springifizieren, d.h. alle Componenten
+als Beans defineren, und injecten.
+
+...was nicht so einfach ist:
+Es gibt praktisch keine Singletons, sondern mehrere Scopes, zB den swing JFrame,
+eines der Models (es k√nnen ja mehrere Files gleichzeitig "offen" sein), etc.
+
+Deshalb kann man nicht einfach alle Objekte als Beans definieren. Explizit Scopes 
+zu implementieren scheint auch eher aufw√ndig.
+Deshalb gehen wir nun wie folgt vor:
+Alle relevanten Klassen werden als "prototype" beans definiert.
+F√r alle relevanten Interfaces gibt es je eine Factory-Klasse, diese ist ein singleton
+bean. Die implementierung dieser FactoryKlassen erzeugt die Objekte je √ber Aufrufe
+zu context.getBean("name", constructorArg, ...);
+
+Somit kann dann im Applikations-Code je wenn ben√tigt √ber eine (oder mehrere) der
+Factory-Objekte beliebig neue Objekte erzeugt werden.
+Gleichzeitig sind diese Objekte aber auch alle beans, so das beliebige Services
+etc injected werden k√nnen.
 ----------------------------------------------------------------------------------------
 done 2017-06-11 (
 Double buffering, Application Thread
