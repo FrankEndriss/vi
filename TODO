@@ -1,10 +1,26 @@
 
 ----------------------------------------------------------------------------------------
+Umlaute: äöü ÄÖÜ ß
+----------------------------------------------------------------------------------------
 Ã„nderungen in der GrÃ¶ÃŸe des GUI-Fensters sollen/mÃssen sich auf die grÃ¶Â´e des
 View-Bereiches auswirken.
 Dabei ist ggf auf die Ã„nderung der GrÃ¶ÃŸe des Buffer-Images zu be¼rcksichtigen.
 ----------------------------------------------------------------------------------------
 Mehrzeilige Darstellung von Zeilen lÃnger als die Fensterbreite.
+Um das korrekt zu machen soll muss das Datenmodell "in mehreren Schichten" definiert
+werden:
+DataModel
+  Letztlich sind dies die Zeilen im File/Buffer.
+ScreenRaster
+  Spalten x Zeilen Schachbrett, also die sichtbare, verfügbare "Zeichenfläche"
+ViewModel
+  Abbildung DataModel->ScreenRaster. Also für jede Zeile die Info wie viele
+  ScreenZeilen, letztlich die Übersetzung DataModel[x1][y1] -> ScreenRaster[x2][y2].
+  Also die Info welche Zeile des DataModel wird in welcher Zeile des ScreenModel
+  dargestellt, und dasselbe für einzelne Chars und Spalten (Tabulatorproblem).
+CursorModel
+  CursorPosition, im DataModel und im ScreenRaster
+
 ----------------------------------------------------------------------------------------
 command line mode instead of awt window
 may be: https://github.com/mabe02/lanterna/blob/master/docs/tutorial/Tutorial01.md
