@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 public class CursorModelImpl implements CursorModel {
 	private final Set<CursorPositionChangedEventListener> cpceListeners=new HashSet<CursorPositionChangedEventListener>();
 
+	// Cursor position in ViewModel
 	private int cPosX;
 	private int cPosY;
 
@@ -34,6 +35,11 @@ public class CursorModelImpl implements CursorModel {
 
 	public void moveCursorUp(final int lines) {
 		// number of lines we need to scroll the window up
+		if(lines<0) {
+			moveCursorDown(-lines);
+			return;
+		}
+
 		final int scrollUpLines=lines>cPosY?lines-cPosY:0;
 		if(scrollUpLines>0) {
 			boolean success=viewModel.scrollUp(scrollUpLines);
@@ -57,6 +63,17 @@ public class CursorModelImpl implements CursorModel {
 		fireCursorPosition(cPosX, cPosY);
 	}
 
+	private void moveCursorDown(final int lines) {
+		if(lines<0) {
+			moveCursorUp(-lines);
+			return;
+		}
+
+		// TODO: find if the cursor is on the last line of the screen.
+		// in this case we have to scroll the screen downthe cursor is on the last line of the screen.
+		// in this case we have to scroll the screen down
+	}
+
 	/* We need to make sure that the cursor position does not move "out-of-range",
 	 * this is not left of the beginning of the line, and not right of the end of the line.
 	 * @see com.happypeople.vi.CursorModel#moveCursorLeft(int)
@@ -66,9 +83,8 @@ public class CursorModelImpl implements CursorModel {
 		if(newPosX<0)
 			newPosX=0;
 		else {
-			long[] modelPos=new long[2];
-			viewModel.getModelPositionFromCursorPosition(newPosX, cPosY, modelPos);
-			final String line=linesModel.get(modelPos[1]);
+			final DataCursorPosition dataPos=viewModel.getDataPositionFromViewPosition(new ViewCursorPosition(newPosX, cPosY));
+			final String line=linesModel.get(dataPos.getY());
 			System.out.println("line under cursor: "+line);
 			if(newPosX>line.length()-1)
 				newPosX=line.length()-1;
