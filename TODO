@@ -1,5 +1,9 @@
 
 ----------------------------------------------------------------------------------------
+CLI, parsing of args
+https://commons.apache.org/proper/commons-cli/
+https://dzone.com/articles/java-command-line-interfaces-part-1-apache-commons?utm_medium=feed&utm_source=feedpress.me&utm_campaign=Feed:%20dzone%2Fjava
+----------------------------------------------------------------------------------------
 Umlaute: äöü ÄÖÜ ß
 ----------------------------------------------------------------------------------------
 Ã„nderungen in der GrÃ¶ÃŸe des GUI-Fensters sollen/mÃssen sich auf die grÃ¶Â´e des
@@ -20,7 +24,6 @@ ViewModel
   dargestellt, und dasselbe für einzelne Chars und Spalten (Tabulatorproblem).
 CursorModel
   CursorPosition im ViewModel
-
 ----------------------------------------------------------------------------------------
 command line mode instead of awt window
 may be: https://github.com/mabe02/lanterna/blob/master/docs/tutorial/Tutorial01.md
