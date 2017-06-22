@@ -66,10 +66,16 @@ public class SimpleViewModelImpl implements ViewModel {
 			listener.firstLineChanged(evt);
 	}
 
-	public void getModelPositionFromCursorPosition(final int cursorX, final int cursorY, final long[] ret) {
+	public DataCursorPosition getDataPositionFromViewPosition(ViewCursorPosition cpos) {
 		// TODO take into account that long model lines are displayed in more than one screen line
-		ret[0]=cursorX;
-		ret[1]=cursorY+firstLine;
+		// Tabulators occupy more than one column can be ignored here
+		return new DataCursorPosition(cpos.getX(), cpos.getY()+firstLine);
+	}
+
+	public ScreenCursorPosition getScreenPositionFromViewPosition(ViewCursorPosition cpos) {
+		// TODO take into account that long model lines are displayed in more than one screen line
+		// and that tabulators occupy more than one column
+		return new ScreenCursorPosition(cpos.getX(), cpos.getY());
 	}
 
 }

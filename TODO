@@ -19,7 +19,7 @@ ViewModel
   Also die Info welche Zeile des DataModel wird in welcher Zeile des ScreenModel
   dargestellt, und dasselbe für einzelne Chars und Spalten (Tabulatorproblem).
 CursorModel
-  CursorPosition, im DataModel und im ScreenRaster
+  CursorPosition im ViewModel
 
 ----------------------------------------------------------------------------------------
 command line mode instead of awt window
