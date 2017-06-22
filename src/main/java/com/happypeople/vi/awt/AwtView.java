@@ -46,7 +46,7 @@ public class AwtView implements View {
 	final static Logger log=LoggerFactory.getLogger(AwtView.class);
 	
 	/** Blinking frequency of cursor */
-	private final static long C_BLINK_MILLIES=2000;
+	private final static long C_BLINK_MILLIES=750;
 	/** Color of the cursor */
 	private final static Color C_COLOR=Color.RED;
 
@@ -223,7 +223,7 @@ public class AwtView implements View {
 		}
 
 		public void render() {
-			log.info("render(), linesModel="+linesModel);
+			//log.info("render(), linesModel="+linesModel);
 
 			// TODO synchronize
 			

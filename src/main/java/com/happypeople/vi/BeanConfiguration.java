@@ -11,13 +11,13 @@ import org.springframework.context.annotation.Scope;
 @Configuration
 public class BeanConfiguration {
 
+	/*
 	@Bean
 	@Scope("prototype")
 	public BlockingQueue<KeyEvent> inputQueue() {
 		return new LinkedBlockingQueue<KeyEvent>();
 	}
 
-	/*
 	@Bean
 	public AwtViewFactory awtViewFactory() {
 		return new AwtViewFactory();

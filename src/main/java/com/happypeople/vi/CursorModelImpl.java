@@ -33,7 +33,7 @@ public class CursorModelImpl implements CursorModel {
 	}
 
 	public void moveCursorUp(final int lines) {
-		// number of lines we need to scroll up
+		// number of lines we need to scroll the window up
 		final int scrollUpLines=lines>cPosY?lines-cPosY:0;
 		if(scrollUpLines>0) {
 			boolean success=viewModel.scrollUp(scrollUpLines);
@@ -41,6 +41,7 @@ public class CursorModelImpl implements CursorModel {
 				return;
 		}
 		final int actualLines=lines-scrollUpLines; // actual movement of cursor, might be 0
+
 		if(actualLines!=0) {
 			this.cPosY-=actualLines;
 			if(cPosY>=sizeY)

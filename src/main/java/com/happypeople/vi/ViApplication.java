@@ -38,6 +38,8 @@ public class ViApplication {
 		
 		final LinesModelEditor linesModel=linesModelFactory.createEmpty();
 		log.info("linesModel="+linesModel);
+		
+		// remove for testing
 		linesModel.insertBefore(0, "firstLine");
 		linesModel.insertAfter(0, "secondLine");
 		linesModel.insertAfter(1, "thirdLine is longer...and next is an empty line");
