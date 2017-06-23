@@ -56,9 +56,9 @@ public class AwtView implements View {
 	private final Set<ViewSizeChangedEventListener> viewSizeChangedEventListeners=new HashSet<ViewSizeChangedEventListener>();
 	
 	/** current cursor position X in lines/cols, not pixels */
-	private int cPosX=0;
+	private long cPosX=0;
 	/** current cursor position Y in lines/cols, not pixels */
-	private int cPosY=0;
+	private long cPosY=0;
 
 	/** Timestamp blinking cursor was set to visible state (happens on every cursor movement) */
 	private long cTime=System.currentTimeMillis();
@@ -246,7 +246,7 @@ public class AwtView implements View {
 				// calc real Position. cPosX can be after the end of line. In this case we
 				// display the cursor at the last char of the line.
 				// If the line is empty we position the cursor at lCPosX=0
-				final int lCPosX= cPosX<str.length() ? cPosX : (str.length()-1<0? 0 : str.length()-1);
+				final long lCPosX= cPosX<str.length() ? cPosX : (str.length()-1<0? 0 : str.length()-1);
 				
 				// TODO wrap lines longer than getWidth()
 				//fm.stringWidth(str);
@@ -261,12 +261,12 @@ public class AwtView implements View {
 					int cursorXoffset=0;
 
 					if(lCPosX>0) { // left of cursor
-						final String leftStr=str.substring(0, lCPosX);
+						final String leftStr=str.substring(0, (int)lCPosX);
 						cursorXoffset=fm.stringWidth(leftStr);
 						g.drawString(leftStr, 0, baselinePx-fm.getDescent());
 					}
 					// for empty lines there is no char under the cursor, no char at position 0. In this case we use the blank
-					final String cursorChar=str.length()>0?str.substring(lCPosX, lCPosX+1) : "\b";
+					final String cursorChar=str.length()>0?str.substring((int)lCPosX, (int)lCPosX+1) : "\b";
 					final int cursorWidth=fm.stringWidth(cursorChar);
 
 					// draw the Cursor, that is the Cursor background,
@@ -279,7 +279,7 @@ public class AwtView implements View {
 
 					// draw the part right of the cursor
 					if(lCPosX<str.length()-1) {
-						final String rightStr=str.substring(lCPosX+1);
+						final String rightStr=str.substring((int)lCPosX+1);
 						g.drawString(rightStr, cursorXoffset+cursorWidth, baselinePx-fm.getDescent());
 					}
 				} else {

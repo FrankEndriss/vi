@@ -14,7 +14,7 @@ public interface ViewModel {
 	 * @param scrollUpLines number of lines to scroll, may be negative to scroll down
 	 * @return true if done, false if not possible (out of index)
 	 */
-	public boolean scrollUp(int scrollUpLines);
+	public boolean scrollUp(long scrollUpLines);
 
     /** Scrolled the whole window */
     interface FirstLineChangedEvent {

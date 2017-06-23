@@ -26,9 +26,9 @@ public interface CursorModel {
     /** change cursor position on scrren */
     public interface CursorPositionChangedEvent {
             /** @return Column position of the cursor after change */
-           int getScreenX();
+           long getScreenX();
             /** @return Row position of the cursor after change */
-           int getScreenY();
+           long getScreenY();
     }
 
 }
