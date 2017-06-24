@@ -9,23 +9,24 @@ import org.springframework.stereotype.Component;
 @Component
 @Scope("prototype")
 public class CursorModelImpl implements CursorModel {
-	private final Set<CursorPositionChangedEventListener> cpceListeners=new HashSet<CursorPositionChangedEventListener>();
+	private final Set<CursorPositionChangedEventListener> cpceListeners=new HashSet<>();
 
 	// Cursor position in ViewModel
-	private ViewCursorPosition cursorPos=new ViewCursorPosition(0, 0);
+	private ViewCursorPosition cursorPos=ViewCursorPosition.ORIGIN;
 
 	// TODO implement as listener of application window and/or renderer
-	private int sizeX=80;
-	private int sizeY=20;
-	
+	private final int sizeX=80;
+	private final int sizeY=20;
+
 	private final LinesModel linesModel;
 	private final ViewModel viewModel;
-	
+
 	public CursorModelImpl(final LinesModel linesModel, final ViewModel viewModel) {
 		this.linesModel=linesModel;
 		this.viewModel=viewModel;
 	}
 
+	@Override
 	public void moveCursorToScreenPosition(final int posX, final int posY) {
 		throw new RuntimeException("not implemented yet");
 		/*
@@ -35,6 +36,7 @@ public class CursorModelImpl implements CursorModel {
 		*/
 	}
 
+	@Override
 	public void moveCursorUp(final int lines) {
 		// number of lines we need to scroll the window up
 		if(lines<0) {
@@ -44,7 +46,7 @@ public class CursorModelImpl implements CursorModel {
 
 		final long scrollUpLines=lines>cursorPos.getY()?lines-cursorPos.getY():0;
 		if(scrollUpLines>0) {
-			boolean success=viewModel.scrollUp(scrollUpLines);
+			final boolean success=viewModel.scrollUp(scrollUpLines);
 			if(!success) // TODO show error message like "line out of range..."
 				return;
 		}
@@ -54,8 +56,8 @@ public class CursorModelImpl implements CursorModel {
 			long newY=cursorPos.getY()-actualLines;
 			if(newY>=sizeY)
 				newY=sizeY-1;
-		
-			cursorPos=new ViewCursorPosition(cursorPos.getX(), newY);
+
+			cursorPos=cursorPos.setY(newY);
 			// Note that we do not alter cPosX, in spite of that the
 			// line at cPosY could be shorter than the old line, ie
 			// the cursor can not be displayed at position cPosX because
@@ -78,22 +80,25 @@ public class CursorModelImpl implements CursorModel {
 		if(dataCursorPos.getY()+lines>=linesModel.getSize())
 			return;
 
-		// Things to check:
+		// TODO Things to check:
 		// *Is the cursor on the last line of the ViewModel?
-		//   -> need to scroll down
-		
+		//   -> need to scroll view down
+
+		cursorPos=cursorPos.addY(lines);
+		fireCursorPosition(cursorPos);
 	}
 
 	/* We need to make sure that the cursor position does not move "out-of-range",
 	 * this is not left of the beginning of the line, and not right of the end of the line.
 	 * @see com.happypeople.vi.CursorModel#moveCursorLeft(int)
 	 */
+	@Override
 	public void moveCursorLeft(final int chars) {
 		long newPosX=cursorPos.getX()-chars;
 		if(newPosX<0)
 			newPosX=0;
-		else {
-			final DataCursorPosition dataPos=viewModel.getDataPositionFromViewPosition(new ViewCursorPosition(newPosX, cursorPos.getY()));
+		else { // check if right of end of line
+			final DataCursorPosition dataPos=viewModel.getDataPositionFromViewPosition(cursorPos.setX(newPosX));
 			final String line=linesModel.get(dataPos.getY());
 			System.out.println("line under cursor: "+line);
 			if(newPosX>line.length()-1)
@@ -101,28 +106,31 @@ public class CursorModelImpl implements CursorModel {
 			if(newPosX<0)
 				newPosX=0;
 		}
-		cursorPos=new ViewCursorPosition(newPosX, cursorPos.getY());
+		cursorPos=cursorPos.setX(newPosX);
 		fireCursorPosition(cursorPos);
 	}
-	
-	public void addCursorPositionChangedEventListener(CursorPositionChangedEventListener listener) {
+
+	@Override
+	public void addCursorPositionChangedEventListener(final CursorPositionChangedEventListener listener) {
 		cpceListeners.add(listener);
 	}
 
 	protected void fireCursorPosition(final ViewCursorPosition pos) {
 		fireCursorPosition(new CursorPositionChangedEvent() {
+			@Override
 			public long getScreenX() {
 				return pos.getX();
 			}
 
+			@Override
 			public long getScreenY() {
 				return pos.getY();
 			}
 		});
 	}
 
-	protected void fireCursorPosition(CursorPositionChangedEvent evt) {
-		for(CursorPositionChangedEventListener listener : cpceListeners)
+	protected void fireCursorPosition(final CursorPositionChangedEvent evt) {
+		for(final CursorPositionChangedEventListener listener : cpceListeners)
 			listener.cursorPositionChanged(evt);
 	}
 }
