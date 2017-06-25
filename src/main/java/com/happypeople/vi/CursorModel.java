@@ -23,7 +23,7 @@ public interface CursorModel {
 
 	void addCursorPositionChangedEventListener(CursorPositionChangedEventListener listener);
 
-    /** change cursor position on scrren */
+    /** change cursor position on screen */
     public interface CursorPositionChangedEvent {
             /** @return Column position of the cursor after change */
            long getScreenX();

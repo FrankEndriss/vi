@@ -1,11 +1,22 @@
 
 ----------------------------------------------------------------------------------------
+Make AwtView render ScreenModel, not LineModel
+----------------------------------------------------------------------------------------
+Order classes into packages
+----------------------------------------------------------------------------------------
 CLI, parsing of args
+
+Apache, declarative in java code:
 https://commons.apache.org/proper/commons-cli/
 https://dzone.com/articles/java-command-line-interfaces-part-1-apache-commons?utm_medium=feed&utm_source=feedpress.me&utm_campaign=Feed:%20dzone%2Fjava
+
+args4j, declarative by annotations:
+http://args4j.kohsuke.org/
+https://www.javacodegeeks.com/2017/06/java-command-line-interfaces-part-2-args4j.html?_utm_source=1-2-2
+
 ----------------------------------------------------------------------------------------
-	Umlaute: äöü ÄÖÜ ß
-	----------------------------------------------------------------------------------------
+Umlaute: äöü ÄÖÜ ß
+----------------------------------------------------------------------------------------
 Ã„nderungen in der GrÃ¶ÃŸe des GUI-Fensters sollen/mÃssen sich auf die grÃ¶Â´e des
 View-Bereiches auswirken.
 Dabei ist ggf auf die Ã„nderung der GrÃ¶ÃŸe des Buffer-Images zu be¼rcksichtigen.
