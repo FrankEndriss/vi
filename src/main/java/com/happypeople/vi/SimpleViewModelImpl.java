@@ -1,8 +1,6 @@
 package com.happypeople.vi;
 
-import java.util.Deque;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
 
 import org.springframework.context.annotation.Scope;
@@ -18,50 +16,8 @@ public class SimpleViewModelImpl implements ViewModel {
 	/** underlying data model */
 	private final LinesModel linesModel;
 
-	private final ScreenModel screenModel=new ScreenModel();
-
-
-	private static class ScreenModel {
-		/** Number of lines on screen */
-		private long screenLineCount=0;
-
-		/** The screenModel holds the lines currently visible
-		 * on screen.
-		 */
-		private final Deque<ScreenLine> screenArray=new LinkedList<>();
-
-		void insertTop(final ScreenLine line) {
-			screenArray.addFirst(line);
-			screenLineCount+=line.getNumScreenLines();
-		}
-		void removeTop() {
-			final ScreenLine line=screenArray.pollFirst();
-			if(line!=null)
-				screenLineCount-=line.getNumScreenLines();
-		}
-
-		void insertBottom(final ScreenLine line) {
-			screenArray.addLast(line);
-			screenLineCount+=line.getNumScreenLines();
-		}
-		void removeBottom() {
-			final ScreenLine line=screenArray.pollLast();
-			if(line!=null)
-				screenLineCount-=line.getNumScreenLines();
-		}
-
-		void clear() {
-			screenArray.clear();
-			screenLineCount=0;
-		}
-
-		long getScreenLineCount() {
-			return screenLineCount;
-		}
-		long getDataLineCount() {
-			return screenArray.size();
-		}
-	}
+	/** display target */
+	private final ScreenModel screenModel;
 
 	/** Index of first line of linesModel displayed in window */
 	private long firstLine=0;
@@ -73,10 +29,17 @@ public class SimpleViewModelImpl implements ViewModel {
 	/** Listeners */
 	private final Set<FirstLineChangedEventListener> flceListeners=new HashSet<>();
 
-	public SimpleViewModelImpl(final int sizeX, final int sizeY, final LinesModel linesModel) {
+	public SimpleViewModelImpl(final int sizeX, final int sizeY, final LinesModel linesModel, final ScreenModel screenModel) {
 		this.linesModel=linesModel;
+		this.screenModel=screenModel;
 		this.sizeX=sizeX;
 		this.sizeY=sizeY;
+		
+		// init screenModel
+		screenModel.clear();
+		long idx=firstLine;
+		while(screenModel.getScreenLineCount()<sizeY && idx<linesModel.getSize())
+			screenModel.insertBottom(new ScreenLine(linesModel.get(idx++), sizeX));
 	}
 
 	@Override

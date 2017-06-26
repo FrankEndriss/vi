@@ -12,6 +12,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
@@ -24,8 +25,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.happypeople.vi.CursorModel.CursorPositionChangedEvent;
-import com.happypeople.vi.LinesModel;
 import com.happypeople.vi.LinesModelEditor.LinesModelChangedEvent;
+import com.happypeople.vi.ScreenModel;
+import com.happypeople.vi.ScreenModel.ScreenModelChangedEvent;
+import com.happypeople.vi.ScreenModel.ScreenModelChangedEventListener;
 import com.happypeople.vi.View;
 import com.happypeople.vi.ViewModel.FirstLineChangedEvent;
 
@@ -50,7 +53,7 @@ public class AwtView implements View {
 	/** Color of the cursor */
 	private final static Color C_COLOR=Color.RED;
 
-	private final LinesModel linesModel;
+	//private final LinesModel linesModel;
 	private final JComponent paintingArea;
 
 	private final Set<ViewSizeChangedEventListener> viewSizeChangedEventListeners=new HashSet<>();
@@ -67,17 +70,28 @@ public class AwtView implements View {
 
 	private final ScreenBuffer screenBuffer=new ScreenBuffer();
 
+	private final ScreenModel screenModel;
+	
 	/** TODO add a "addKeyEventListener(...)" method, to get rid of the
 	 * TODO change LinesModel to ScreenModel
 	 * constructor arg keyEventTarget.
 	 * @param linesModel the data to display on screen
 	 * @param keyEventTarget queue where key events are added, should be removed, and wired on the caller side
 	 */
-	public AwtView(final LinesModel linesModel, final BlockingQueue<KeyEvent> keyEventTarget) {
+	public AwtView(final ScreenModel screenModel, final BlockingQueue<KeyEvent> keyEventTarget) {
 		// some special hook
 		//System.setProperty("sun.awt.noerasebackground", "true");
 
-		this.linesModel=linesModel;
+		this.screenModel=screenModel;
+		
+		screenModel.addScreenModelChangedEventListener(new ScreenModelChangedEventListener() {
+			@Override
+			public void screenModelChanged(ScreenModelChangedEvent evt) {
+				// TODO set hint what changed, render only what changed
+				// Probably in optimized way
+				screenBuffer.render();
+			}
+		});
 
 		final JFrame frame=new JFrame("vi");
 
@@ -86,16 +100,22 @@ public class AwtView implements View {
 		paintingArea=new AwtViewPanel();
 		frame.getContentPane().add(paintingArea);
 
-		// for AWT use:
-		//frame.add(paintingArea);
-
 		paintingArea.addComponentListener(new ComponentListener() {
 
 			@Override
 			public void componentResized(final ComponentEvent e) {
+				final int oldX=screenBuffer.getSizeColumns();
+				final int oldY=screenBuffer.getSizeLines();
+				
 				final java.awt.Component c=e.getComponent();
 				screenBuffer.resize(c.getWidth(), c.getHeight());
-				fireViewSizeChanged(screenBuffer.getSizeColumns(), screenBuffer.getSizeLines());
+				
+				int newX=screenBuffer.getSizeColumns();
+				int newY=screenBuffer.getSizeLines();
+				
+				if(oldX!=newX || oldY!=newY) {
+					fireViewSizeChanged(screenBuffer.getSizeColumns(), screenBuffer.getSizeLines());
+				}
 			}
 
 			@Override
@@ -231,12 +251,34 @@ public class AwtView implements View {
 			}
 		}
 
+		/** Creates in place iterator for 
+		 * @param str source string
+		 * @param maxLen len of chunks of str
+		 * @return Iterable to iterator over parts of str of max len maxLen
+		 */
+		public Iterable<String> split2line(final String str, final int maxLen) {
+			return new Iterable<String>() {
+				int idx=0;
+				@Override
+				public Iterator<String> iterator() {
+					return new Iterator<String>() {
+						@Override
+						public boolean hasNext() {
+							return idx>=0;
+						}
+						@Override
+						public String next() {
+							final int len=Math.min(str.length()-idx, maxLen);
+							final String split=str.substring(idx, idx+len);
+							idx+=len;
+							return split;
+						}
+					};
+				}
+			};
+		}
+
 		public void render() {
-			//log.info("render(), linesModel="+linesModel);
-
-			// TODO synchronize
-
-			// TODO render lines from ScreenModel, not from LinesModel
 
 			final long callStart=System.currentTimeMillis();
 			final Graphics2D g=image.createGraphics();
@@ -249,55 +291,59 @@ public class AwtView implements View {
 			final int lineHeight=fm.getHeight()+fm.getDescent();
 
 			// TODO optimize to draw only what is inside g.getClipBounds();
-			log.info("linesModel.getSize(): "+linesModel.getSize());
 
-			while(baselinePx<image.getHeight() && lineNo<linesModel.getSize()) {
-				baselinePx+=lineHeight;
-				final String str=linesModel.get(lineNo);
-				// calc real Position. cPosX can be after the end of line. In this case we
-				// display the cursor at the last char of the line.
-				// If the line is empty we position the cursor at lCPosX=0
-				final long lCPosX= cPosX<str.length() ? cPosX : (str.length()-1<0? 0 : str.length()-1);
+			final int lengthLimit=sizeLines*sizeColumns;
 
-				// TODO wrap lines longer than getWidth()
-				//fm.stringWidth(str);
+			while(baselinePx<image.getHeight() && lineNo<screenModel.getDataLineCount()) {
+				final String logicalLine=screenModel.render(lineNo, lengthLimit);
+				
+				for(String screenLine : split2line(logicalLine, sizeColumns)) {
 
-				// redraw background
-				g.setColor(Color.BLACK);
-				g.fillRect(0, baselinePx-lineHeight, image.getWidth(), lineHeight);
-				g.setColor(Color.WHITE);
+					baselinePx+=lineHeight;
+					// calc real Position. cPosX can be after the end of line. In this case we
+					// display the cursor at the last char of the line.
+					// If the line is empty we position the cursor at lCPosX=0
+					final long lCPosX= cPosX<screenLine.length() ? cPosX : (screenLine.length()-1<0? 0 : screenLine.length()-1);
 
-				if(cPosY==lineNo && (((System.currentTimeMillis()-cTime)/C_BLINK_MILLIES)&0x1)==0) { // cursor visible blink phase
-					// split the line in the part before the cursor, the cursor, and the part after the cursor
-					int cursorXoffset=0;
+					// TODO wrap lines longer than getWidth()
+					//fm.stringWidth(str);
 
-					if(lCPosX>0) { // left of cursor
-						final String leftStr=str.substring(0, (int)lCPosX);
-						cursorXoffset=fm.stringWidth(leftStr);
-						g.drawString(leftStr, 0, baselinePx-fm.getDescent());
-					}
-					// for empty lines there is no char under the cursor, no char at position 0. In this case we use the blank
-					final String cursorChar=str.length()>0?str.substring((int)lCPosX, (int)lCPosX+1) : "\b";
-					final int cursorWidth=fm.stringWidth(cursorChar);
-
-					// draw the Cursor, that is the Cursor background,
-					g.setColor(C_COLOR);
-					g.fillRect(cursorXoffset, baselinePx-lineHeight, cursorWidth, lineHeight);
-
-					// ...and the character in the cursor
+					// redraw background
+					g.setColor(Color.BLACK);
+					g.fillRect(0, baselinePx-lineHeight, image.getWidth(), lineHeight);
 					g.setColor(Color.WHITE);
-					g.drawString(cursorChar, cursorXoffset, baselinePx-fm.getDescent());
 
-					// draw the part right of the cursor
-					if(lCPosX<str.length()-1) {
-						final String rightStr=str.substring((int)lCPosX+1);
-						g.drawString(rightStr, cursorXoffset+cursorWidth, baselinePx-fm.getDescent());
+					if(cPosY==lineNo && (((System.currentTimeMillis()-cTime)/C_BLINK_MILLIES)&0x1)==0) { // cursor visible blink phase
+						// split the line in the part before the cursor, the cursor, and the part after the cursor
+						int cursorXoffset=0;
+
+						if(lCPosX>0) { // left of cursor
+							final String leftStr=screenLine.substring(0, (int)lCPosX);
+							cursorXoffset=fm.stringWidth(leftStr);
+							g.drawString(leftStr, 0, baselinePx-fm.getDescent());
+						}
+						// for empty lines there is no char under the cursor, no char at position 0. In this case we use the blank
+						final String cursorChar=screenLine.length()>0?screenLine.substring((int)lCPosX, (int)lCPosX+1) : "\b";
+						final int cursorWidth=fm.stringWidth(cursorChar);
+
+						// draw the Cursor, that is the Cursor background,
+						g.setColor(C_COLOR);
+						g.fillRect(cursorXoffset, baselinePx-lineHeight, cursorWidth, lineHeight);
+
+						// ...and the character in the cursor
+						g.setColor(Color.WHITE);
+						g.drawString(cursorChar, cursorXoffset, baselinePx-fm.getDescent());
+
+						// draw the part right of the cursor
+						if(lCPosX<screenLine.length()-1) {
+							final String rightStr=screenLine.substring((int)lCPosX+1);
+							g.drawString(rightStr, cursorXoffset+cursorWidth, baselinePx-fm.getDescent());
+						}
+					} else {
+						// simply draw the line string
+						g.drawString(screenLine, 0, baselinePx-fm.getDescent());
 					}
-				} else {
-					// simply draw the line string
-					g.drawString(str, 0, baselinePx-fm.getDescent());
 				}
-
 				lineNo++;
 			}
 			// trigger repaint int AWT-Thread

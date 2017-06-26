@@ -1,6 +1,16 @@
 
 ----------------------------------------------------------------------------------------
 Make AwtView render ScreenModel, not LineModel
+Wiring should be/is:
+
+Controller changes
+-->LinesModel
+	--> ???
+-->ViewModel changes
+	-->ScreenModel is rendered by
+		-->View
+-->CursorModel
+	-->ViewModel
 ----------------------------------------------------------------------------------------
 Order classes into packages
 ----------------------------------------------------------------------------------------

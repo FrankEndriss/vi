@@ -18,13 +18,4 @@ public interface View extends LinesModelChangedEventListener, CursorPositionChan
 	 */
 	public void addViewSizeChangedEventListener(ViewSizeChangedEventListener listener);
 
-	/**
-	 * @return the available lines in the view most likely depending on the size of the application window
-	public int getWindowLines();
-	 */
-	
-	/**
-	 * @return the available rows in the view most likely depending on the size of the application window
-	public int getWindowRows();
-	 */
 }

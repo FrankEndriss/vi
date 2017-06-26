@@ -9,7 +9,7 @@ public class ViewModelFactory {
 	@Autowired
 	private ApplicationContext context;
 	
-	public ViewModel createViewModel(final LinesModel linesModel) {
-		return context.getBean(SimpleViewModelImpl.class, 80, 20, linesModel);
+	public ViewModel createViewModel(final LinesModel linesModel, final ScreenModel screenModel) {
+		return context.getBean(SimpleViewModelImpl.class, 80, 20, linesModel, screenModel);
 	}
 }

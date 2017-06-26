@@ -68,7 +68,7 @@ class ScreenLine {
 	 * only printable chars which print one-to-one on screen.
 	 * The conversion of the line stops at lengthLimit
 	 */
-	private String render(final int lengthLimit) {
+	public String render(final int lengthLimit) {
 		final String line=getLine();
 		final StringBuilder sb=new StringBuilder();
 		long pos=0;

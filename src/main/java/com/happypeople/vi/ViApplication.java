@@ -46,9 +46,10 @@ public class ViApplication {
 		linesModel.insertAfter(2, "");
 		linesModel.insertAfter(3, "last (fifth) line");
 
-		final View view= awtViewFactory.createAwtView(linesModel, inputQueue);
+		final ScreenModel screenModel=new ScreenModel();
+		final View view= awtViewFactory.createAwtView(screenModel, inputQueue);
 
-		final ViewModel viewModel=viewModelFactory.createViewModel(linesModel);
+		final ViewModel viewModel=viewModelFactory.createViewModel(linesModel, screenModel);
 		final CursorModel cursorModel=cursorModelFactory.createCursorModel(linesModel, viewModel);
 		final KeyTypedController controller=context.getBean(ViController.class, linesModel, cursorModel);
 
