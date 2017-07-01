@@ -1,8 +1,10 @@
 package com.happypeople.vi;
 
+import com.happypeople.vi.View.ViewSizeChangedEventListener;
+
 /** A CursorModel keeps track of the cursor position on screen.
  */
-public interface CursorModel {
+public interface CursorModel extends ViewSizeChangedEventListener {
 
 	/** Low-Level cursor movement, request to position the cursor somewhere
 	 * on the visible screen.

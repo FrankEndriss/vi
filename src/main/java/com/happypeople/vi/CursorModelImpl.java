@@ -6,6 +6,8 @@ import java.util.Set;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.happypeople.vi.View.ViewSizeChangedEvent;
+
 @Component
 @Scope("prototype")
 public class CursorModelImpl implements CursorModel {
@@ -14,9 +16,8 @@ public class CursorModelImpl implements CursorModel {
 	// Cursor position in ViewModel
 	private ViewCursorPosition cursorPos=ViewCursorPosition.ORIGIN;
 
-	// TODO implement as listener of application window and/or renderer
-	private final int sizeX=80;
-	private final int sizeY=20;
+	private int sizeX=0;
+	private int sizeY=0;
 
 	private final LinesModel linesModel;
 	private final ViewModel viewModel;
@@ -132,5 +133,11 @@ public class CursorModelImpl implements CursorModel {
 	protected void fireCursorPosition(final CursorPositionChangedEvent evt) {
 		for(final CursorPositionChangedEventListener listener : cpceListeners)
 			listener.cursorPositionChanged(evt);
+	}
+
+	@Override
+	public void viewSizeChanged(final ViewSizeChangedEvent evt) {
+		this.sizeX=evt.getSizeX();
+		this.sizeY=evt.getSizeY();
 	}
 }

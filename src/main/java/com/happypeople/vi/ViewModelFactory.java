@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 public class ViewModelFactory {
 	@Autowired
 	private ApplicationContext context;
-	
+
 	public ViewModel createViewModel(final LinesModel linesModel, final ScreenModel screenModel) {
-		return context.getBean(SimpleViewModelImpl.class, 80, 20, linesModel, screenModel);
+		return context.getBean(SimpleViewModelImpl.class, 80, 25, linesModel, screenModel);
 	}
 }

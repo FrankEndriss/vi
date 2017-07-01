@@ -1,17 +1,17 @@
 package com.happypeople.vi;
 
-/** Implementation of a logical line and the
- * display of that line on screen.
- * TODO: make editable
+/** Implementation of the mapping of a logical line
+ * to the display of that line on screen.
+ * TODO: make editable/dynamic
  */
 class ScreenLine {
 	private final String line;
-	private final int screenSizeX;
+	private int screenSizeX;
 
 	/** TODO use a LineReference instead of a String for
-	 * the first argument. That could make it editable, and
-	 * hence more dynamic while changes of the line.
-	 * @param line the string to display when displaying the line, ie the contents of the line
+	 * the first argument. That could make it
+	 * more dynamic while changes of the line.
+	 * @param line the string to display when displaying the line, ie the content of the line
 	 * @param screenSizeX with of the screen in columns
 	 */
 	ScreenLine(final String line, final int screenSizeX) {
@@ -19,14 +19,21 @@ class ScreenLine {
 		this.screenSizeX=screenSizeX;
 	}
 
+	/** Resets the size of the screen in X dimension.
+	 * @param sizeX the new width of the view, number of columns
+	 */
+	public void setScreenSizeX(final int sizeX) {
+		this.screenSizeX=sizeX;
+	}
+
 	/** Calculates the relative position of the cursor if
 	 * it is positioned on the viewX char of the line.
-	 * Takes into account tabs and multi line display
-	 * @param relX logical cursor position in line from ViewCursorPosition
-	 * @return ScreenCursorPosition
+	 * Takes into account tabs and multi line display.
+	 * @param logicalX logical cursor position in line from ViewCursorPosition
+	 * @return ScreenCursorPosition with (0,0) at beginning of the line
 	 */
-	public ScreenCursorPosition getScreenPos(final long viewX) {
-		final long displayX=getDisplayX(viewX);
+	public ScreenCursorPosition getScreenPos(final long logicalX) {
+		final long displayX=getDisplayX(logicalX);
 		return new ScreenCursorPosition(displayX%screenSizeX, displayX/screenSizeX);
 	}
 
@@ -48,9 +55,13 @@ class ScreenLine {
 		return getDisplayX(Long.MAX_VALUE);
 	}
 
-	/**
-	 * @param logicalX
-	 * @return
+	/** Calculates the display position of a char of a line.
+	 * This position is not equal to the position of the char
+	 * in the string since some chars are displayed using more
+	 * than one space. iE TAB, or other special chars.
+	 * @param logicalX the position of the char in the lines String
+	 * @return The position of the char on display, without
+	 * considering linebreaks.
 	 */
 	public long getDisplayX(final long logicalX) {
 		long pos=0;

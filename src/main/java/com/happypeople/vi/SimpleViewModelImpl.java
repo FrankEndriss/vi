@@ -3,8 +3,12 @@ package com.happypeople.vi;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import com.happypeople.vi.View.ViewSizeChangedEvent;
 
 /** Simple implementation.
  * Fixed Size window
@@ -12,6 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Scope("prototype")
 public class SimpleViewModelImpl implements ViewModel {
+	private final static Logger log=LoggerFactory.getLogger(SimpleViewModelImpl.class);
 
 	/** underlying data model */
 	private final LinesModel linesModel;
@@ -23,8 +28,8 @@ public class SimpleViewModelImpl implements ViewModel {
 	private long firstLine=0;
 
 	/** Window size in lines */
-	private final int sizeX;
-	private final int sizeY;
+	private int sizeX;
+	private int sizeY;
 
 	/** Listeners */
 	private final Set<FirstLineChangedEventListener> flceListeners=new HashSet<>();
@@ -32,24 +37,36 @@ public class SimpleViewModelImpl implements ViewModel {
 	public SimpleViewModelImpl(final int sizeX, final int sizeY, final LinesModel linesModel, final ScreenModel screenModel) {
 		this.linesModel=linesModel;
 		this.screenModel=screenModel;
-		this.sizeX=sizeX;
-		this.sizeY=sizeY;
-		
-		// init screenModel
-		screenModel.clear();
-		long idx=firstLine;
-		while(screenModel.getScreenLineCount()<sizeY && idx<linesModel.getSize())
-			screenModel.insertBottom(new ScreenLine(linesModel.get(idx++), sizeX));
+		setScreenSize(sizeX, sizeY);
+	}
+
+	private void setScreenSize(final int x, final int y) {
+		log.info("setScreenSize: "+x+" x "+y);
+		if(x!=sizeX || y!=sizeY) {
+			this.sizeX=x;
+			this.sizeY=y;
+
+			screenModel.clear();
+			screenModel.setSizeX(x);
+			long idx=firstLine;
+			while(screenModel.getScreenLineCount()<sizeY && idx<linesModel.getSize()) {
+				final String line=linesModel.get(idx);
+				log.info("adding line to screenModel: "+line);
+				screenModel.insertBottom(linesModel.get(idx));
+				idx++;
+			}
+		}
 	}
 
 	@Override
 	public void setFirstLine(final long firstLine) {
+		log.info("try setting first line idx: "+firstLine);
 		if(firstLine>=0 && firstLine <linesModel.getSize() && this.firstLine!=firstLine) {
 			screenModel.clear();
 			this.firstLine=firstLine;
 			long idx=firstLine;
 			while(screenModel.getScreenLineCount()<sizeY && idx<linesModel.getSize())
-				screenModel.insertBottom(new ScreenLine(linesModel.get(idx++), sizeX));
+				screenModel.insertBottom(linesModel.get(idx++));
 
 			// TODO fire other event, firstLineChanged is semantically not sufficient
 			fireFirstLineChanged(firstLine);
@@ -69,12 +86,12 @@ public class SimpleViewModelImpl implements ViewModel {
 
 		if(scrollUpLines>0) {
 			for(long i=0; i<scrollUpLines; i++) {
-				screenModel.insertTop(new ScreenLine(linesModel.get(firstLine-i-1), sizeX));
+				screenModel.insertTop(linesModel.get(firstLine-i-1));
 			}
 		} else {
 			long bottomLineIdx=firstLine+screenModel.getDataLineCount();
 			for(long i=0; i<-scrollUpLines; i++) {
-				screenModel.insertBottom(new ScreenLine(linesModel.get(bottomLineIdx), sizeX));
+				screenModel.insertBottom(linesModel.get(bottomLineIdx));
 				bottomLineIdx++;
 			}
 		}
@@ -127,4 +144,8 @@ public class SimpleViewModelImpl implements ViewModel {
 		return new ScreenCursorPosition(relPos.getX(), screenY+relPos.getY());
 	}
 
+	@Override
+	public void viewSizeChanged(final ViewSizeChangedEvent evt) {
+		setScreenSize(evt.getSizeX(), evt.getSizeY());
+	}
 }

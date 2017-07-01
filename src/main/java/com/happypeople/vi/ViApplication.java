@@ -19,26 +19,26 @@ import com.happypeople.vi.awt.AwtViewFactory;
 @SpringBootApplication
 public class ViApplication {
 	private final static Logger log=LoggerFactory.getLogger(ViApplication.class);
-	
-	public static void main(String[] args) {
+
+	public static void main(final String[] args) {
 		final ConfigurableApplicationContext context=
 				new SpringApplicationBuilder(ViApplication.class).headless(false).run(args);
 
 		System.out.println("args: "+Arrays.asList(args));
-		
+
 		final AwtViewFactory awtViewFactory=context.getBean(AwtViewFactory.class);
 		final LinesModelFactory linesModelFactory=context.getBean(LinesModelFactory.class);
 		final ViewModelFactory viewModelFactory=context.getBean(ViewModelFactory.class);
 		final CursorModelFactory cursorModelFactory=context.getBean(CursorModelFactory.class);
 
 		// TODO springify
-		final BlockingQueue<KeyEvent> inputQueue=new LinkedBlockingQueue<KeyEvent>();
+		final BlockingQueue<KeyEvent> inputQueue=new LinkedBlockingQueue<>();
 
 		// TODO parse args
-		
+
 		final LinesModelEditor linesModel=linesModelFactory.createEmpty();
 		log.info("linesModel="+linesModel);
-		
+
 		// remove for testing
 		linesModel.insertBefore(0, "firstLine");
 		linesModel.insertAfter(0, "secondLine");
@@ -50,13 +50,16 @@ public class ViApplication {
 		final View view= awtViewFactory.createAwtView(screenModel, inputQueue);
 
 		final ViewModel viewModel=viewModelFactory.createViewModel(linesModel, screenModel);
+		view.addViewSizeChangedEventListener(viewModel);
+
 		final CursorModel cursorModel=cursorModelFactory.createCursorModel(linesModel, viewModel);
+		view.addViewSizeChangedEventListener(cursorModel);
 		final KeyTypedController controller=context.getBean(ViController.class, linesModel, cursorModel);
 
 		linesModel.addLinesModelChangedEventListener(view);
 		cursorModel.addCursorPositionChangedEventListener(view);
 		viewModel.addFirstLineChangedEventListener(view);
-		
+
 		// run the application by accepting input
 		controller.processInput(inputQueue);
 

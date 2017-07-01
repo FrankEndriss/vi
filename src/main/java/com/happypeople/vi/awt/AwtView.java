@@ -71,7 +71,7 @@ public class AwtView implements View {
 	private final ScreenBuffer screenBuffer=new ScreenBuffer();
 
 	private final ScreenModel screenModel;
-	
+
 	/** TODO add a "addKeyEventListener(...)" method, to get rid of the
 	 * TODO change LinesModel to ScreenModel
 	 * constructor arg keyEventTarget.
@@ -83,10 +83,10 @@ public class AwtView implements View {
 		//System.setProperty("sun.awt.noerasebackground", "true");
 
 		this.screenModel=screenModel;
-		
+
 		screenModel.addScreenModelChangedEventListener(new ScreenModelChangedEventListener() {
 			@Override
-			public void screenModelChanged(ScreenModelChangedEvent evt) {
+			public void screenModelChanged(final ScreenModelChangedEvent evt) {
 				// TODO set hint what changed, render only what changed
 				// Probably in optimized way
 				screenBuffer.render();
@@ -106,13 +106,13 @@ public class AwtView implements View {
 			public void componentResized(final ComponentEvent e) {
 				final int oldX=screenBuffer.getSizeColumns();
 				final int oldY=screenBuffer.getSizeLines();
-				
+
 				final java.awt.Component c=e.getComponent();
 				screenBuffer.resize(c.getWidth(), c.getHeight());
-				
-				int newX=screenBuffer.getSizeColumns();
-				int newY=screenBuffer.getSizeLines();
-				
+
+				final int newX=screenBuffer.getSizeColumns();
+				final int newY=screenBuffer.getSizeLines();
+
 				if(oldX!=newX || oldY!=newY) {
 					fireViewSizeChanged(screenBuffer.getSizeColumns(), screenBuffer.getSizeLines());
 				}
@@ -214,7 +214,7 @@ public class AwtView implements View {
 		private int sizeLines=0;
 
 		public void resize(final int width, final int height) {
-			log.info("resize, width="+width+" height="+height);
+			log.info("resize, pixels, width="+width+" height="+height);
 			final BufferedImage newImage=new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 			final Graphics2D g=newImage.createGraphics();
 			g.setColor(COLOR_BACKGROUND);
@@ -235,6 +235,7 @@ public class AwtView implements View {
 			final int colWidth=fm.stringWidth("0123456789abcdef")/16;
 			sizeLines=height/lineHeight;
 			sizeColumns=width/colWidth;
+			log.info("resize, logical width="+sizeColumns+" height="+sizeLines);
 		}
 
 		/** This methods simply paints the buffer image to target.
@@ -251,7 +252,7 @@ public class AwtView implements View {
 			}
 		}
 
-		/** Creates in place iterator for 
+		/** Creates in place iterator for
 		 * @param str source string
 		 * @param maxLen len of chunks of str
 		 * @return Iterable to iterator over parts of str of max len maxLen
@@ -264,7 +265,7 @@ public class AwtView implements View {
 					return new Iterator<String>() {
 						@Override
 						public boolean hasNext() {
-							return idx>=0;
+							return idx<str.length();
 						}
 						@Override
 						public String next() {
@@ -296,8 +297,8 @@ public class AwtView implements View {
 
 			while(baselinePx<image.getHeight() && lineNo<screenModel.getDataLineCount()) {
 				final String logicalLine=screenModel.render(lineNo, lengthLimit);
-				
-				for(String screenLine : split2line(logicalLine, sizeColumns)) {
+
+				for(final String screenLine : split2line(logicalLine, sizeColumns)) {
 
 					baselinePx+=lineHeight;
 					// calc real Position. cPosX can be after the end of line. In this case we

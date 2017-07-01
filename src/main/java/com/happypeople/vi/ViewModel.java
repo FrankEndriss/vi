@@ -1,10 +1,12 @@
 package com.happypeople.vi;
 
+import com.happypeople.vi.View.ViewSizeChangedEventListener;
+
 /** The ViewModel keep track about which part of the LinesModel is currently
  * visible, ie the window.
  */
-public interface ViewModel {
-	/** Request to set the first visible line on screen 
+public interface ViewModel extends ViewSizeChangedEventListener {
+	/** Request to set the first visible line on screen
 	 * @param firstLine Index into the LinesModel, the line shown as first line on screen
 	 */
 	public void setFirstLine(long firstLine);
@@ -24,7 +26,7 @@ public interface ViewModel {
     }
 
     void addFirstLineChangedEventListener(FirstLineChangedEventListener listener);
- 
+
      /** The method gets a logical cursor position, and returns the position in the LinesModel.
      * @param cpos Cursor position in view
      * @return calculated cursor position in data model
