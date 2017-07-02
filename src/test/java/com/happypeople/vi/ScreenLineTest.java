@@ -32,17 +32,20 @@ public class ScreenLineTest {
 		assertEquals("should be two lines", 2, out.getNumScreenLines());
 	}
 
+	private ScreenCursorPosition screenCursorPosition(final int x, final int y) {
+		return ScreenCursorPosition.ORIGIN.addX(x).addY(y);
+	}
 	/** Test screenPosition calculation over simple String (without TABs) */
 	@Test
 	public void testGetScreenPos1() {
-		assertEquals("origin should be origin", new ScreenCursorPosition(0, 0), out.getScreenPos(0));
-		assertEquals("position 2", new ScreenCursorPosition(2, 0), out.getScreenPos(2));
+		assertEquals("origin should be origin", screenCursorPosition(0, 0), out.getScreenPos(0));
+		assertEquals("position 2", screenCursorPosition(2, 0), out.getScreenPos(2));
 
 		out.setScreenSizeX(4);
-		assertEquals("position 3, should be last of first line", new ScreenCursorPosition(3, 0), out.getScreenPos(3));
-		assertEquals("position 4, should be start of second line", new ScreenCursorPosition(0, 1), out.getScreenPos(4));
-		assertEquals("position 5, should be second of second line", new ScreenCursorPosition(1, 1), out.getScreenPos(5));
-		assertEquals("position 7, should be fourth of second line", new ScreenCursorPosition(3, 1), out.getScreenPos(7));
+		assertEquals("position 3, should be last of first line", screenCursorPosition(3, 0), out.getScreenPos(3));
+		assertEquals("position 4, should be start of second line", screenCursorPosition(0, 1), out.getScreenPos(4));
+		assertEquals("position 5, should be second of second line", screenCursorPosition(1, 1), out.getScreenPos(5));
+		assertEquals("position 7, should be fourth of second line", screenCursorPosition(3, 1), out.getScreenPos(7));
 	}
 
 	/** Test render simple String */
@@ -74,14 +77,14 @@ public class ScreenLineTest {
 	public void testGetScreenPos2() {
 		// a tab at first position should be expanded to four blanks
 		out=new ScreenLine("\tHello World", 80);
-		assertEquals("first char is a TAB", new ScreenCursorPosition(3, 0), out.getScreenPos(0));
-		assertEquals("first char is a TAB, second not", new ScreenCursorPosition(4, 0), out.getScreenPos(1));
+		assertEquals("first char is a TAB", screenCursorPosition(3, 0), out.getScreenPos(0));
+		assertEquals("first char is a TAB, second not", screenCursorPosition(4, 0), out.getScreenPos(1));
 
 		out.setScreenSizeX(5);
-		assertEquals("position 2, should be first of second line", new ScreenCursorPosition(0, 1), out.getScreenPos(2));
-		assertEquals("position 3, should be second of second line", new ScreenCursorPosition(1, 1), out.getScreenPos(3));
-		assertEquals("position 4, should be third of second line", new ScreenCursorPosition(2, 1), out.getScreenPos(4));
-		assertEquals("position 7, should be first of third line", new ScreenCursorPosition(0, 2), out.getScreenPos(7));
+		assertEquals("position 2, should be first of second line", screenCursorPosition(0, 1), out.getScreenPos(2));
+		assertEquals("position 3, should be second of second line", screenCursorPosition(1, 1), out.getScreenPos(3));
+		assertEquals("position 4, should be third of second line", screenCursorPosition(2, 1), out.getScreenPos(4));
+		assertEquals("position 7, should be first of third line", screenCursorPosition(0, 2), out.getScreenPos(7));
 	}
 
 }

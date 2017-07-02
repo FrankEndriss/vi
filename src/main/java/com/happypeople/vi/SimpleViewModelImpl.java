@@ -141,7 +141,7 @@ public class SimpleViewModelImpl implements ViewModel {
 		final ScreenCursorPosition relPos=viewLine.getScreenPos(cpos.getX());
 		screenY+=relPos.getY();
 
-		return new ScreenCursorPosition(relPos.getX(), screenY+relPos.getY());
+		return ScreenCursorPosition.ORIGIN.addX(relPos.getX()).addY(screenY+relPos.getY());
 	}
 
 	@Override

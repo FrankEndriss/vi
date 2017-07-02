@@ -1,10 +1,15 @@
 package com.happypeople.vi;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /** Implementation of the mapping of a logical line
  * to the display of that line on screen.
  * TODO: make editable/dynamic
  */
 class ScreenLine {
+	private final static Logger log=LoggerFactory.getLogger(ScreenLine.class);
+
 	private final String line;
 	private int screenSizeX;
 
@@ -34,7 +39,8 @@ class ScreenLine {
 	 */
 	public ScreenCursorPosition getScreenPos(final long logicalX) {
 		final long displayX=getDisplayX(logicalX);
-		return new ScreenCursorPosition(displayX%screenSizeX, displayX/screenSizeX);
+		log.info("in getScreenPos(), displayX="+displayX+" screenSizeX="+screenSizeX);
+		return ScreenCursorPosition.ORIGIN.addX(displayX%screenSizeX).addY(displayX/screenSizeX);
 	}
 
 	/**

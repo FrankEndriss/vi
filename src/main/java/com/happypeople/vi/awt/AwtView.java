@@ -26,10 +26,12 @@ import org.springframework.stereotype.Component;
 
 import com.happypeople.vi.CursorModel.CursorPositionChangedEvent;
 import com.happypeople.vi.LinesModelEditor.LinesModelChangedEvent;
+import com.happypeople.vi.ScreenCursorPosition;
 import com.happypeople.vi.ScreenModel;
 import com.happypeople.vi.ScreenModel.ScreenModelChangedEvent;
 import com.happypeople.vi.ScreenModel.ScreenModelChangedEventListener;
 import com.happypeople.vi.View;
+import com.happypeople.vi.ViewCursorPosition;
 import com.happypeople.vi.ViewModel.FirstLineChangedEvent;
 
 /** How painting should be done:
@@ -58,10 +60,8 @@ public class AwtView implements View {
 
 	private final Set<ViewSizeChangedEventListener> viewSizeChangedEventListeners=new HashSet<>();
 
-	/** current cursor position X in lines/cols, not pixels */
-	private long cPosX=0;
-	/** current cursor position Y in lines/cols, not pixels */
-	private long cPosY=0;
+	/** current view cursor position */
+	private ViewCursorPosition cPos=ViewCursorPosition.ORIGIN;
 
 	/** Timestamp blinking cursor was set to visible state (happens on every cursor movement) */
 	private long cTime=System.currentTimeMillis();
@@ -323,7 +323,7 @@ public class AwtView implements View {
 					// calc real Position. cPosX can be after the end of line. In this case we
 					// display the cursor at the last char of the line.
 					// If the line is empty we position the cursor at lCPosX=0
-					final long lCPosX= cPosX<screenLine.length() ? cPosX : (screenLine.length()-1<0? 0 : screenLine.length()-1);
+					//final long lCPosX= cPosX<screenLine.length() ? cPosX : (screenLine.length()-1<0? 0 : screenLine.length()-1);
 
 					// redraw background
 					g.setColor(COLOR_BACKGROUND);
@@ -382,6 +382,24 @@ public class AwtView implements View {
 				screenLineNo++;
 			}
 
+			// draw the cursor
+			if((((System.currentTimeMillis()-cTime)/C_BLINK_MILLIES)&0x1)==0) { // cursor visible blink phase
+				final ScreenCursorPosition scPos=screenModel.calcScreenCursorPosition(cPos);
+				log.info("scPos: "+scPos);
+				final long lineStartPx=fontData.lineHeight*scPos.getY();
+				final long colStartPx=fontData.colWidht*scPos.getX();
+
+				final int rgbWhite=Color.WHITE.getRGB();
+				// draw every white pixel in BLACK and all others in WHITE
+				// note that this is highly ineffecient...
+				for(int pLine=(int)lineStartPx; pLine<lineStartPx+fontData.lineHeight; pLine++) {
+					for(int pCol=(int)colStartPx; pCol<colStartPx+fontData.colWidht; pCol++) {
+						g.setColor(image.getRGB(pCol, pLine)==rgbWhite?Color.BLACK:Color.WHITE); // invert Colors
+						g.fillRect(pCol, pLine, 1, 1);
+					}
+				}
+			}
+
 			// trigger repaint int AWT-Thread
 			paintingArea.repaint();
 		}
@@ -411,10 +429,9 @@ public class AwtView implements View {
 	@Override
 	public void cursorPositionChanged(final CursorPositionChangedEvent evt) {
 		resetCTime();
-		cPosX=evt.getScreenX();
-		cPosY=evt.getScreenY();
+		cPos=evt.getCursorPosition();
 		// TODO repaint only the cursor
-		log.info("new cursor position, x="+cPosX+", y="+cPosY);
+		log.info("new cursor position, x="+cPos.getX()+", y="+cPos.getY());
 		screenBuffer.render();
 	}
 

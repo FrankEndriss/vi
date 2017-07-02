@@ -27,10 +27,8 @@ public interface CursorModel extends ViewSizeChangedEventListener {
 
     /** change cursor position on screen */
     public interface CursorPositionChangedEvent {
-            /** @return Column position of the cursor after change */
-           long getScreenX();
-            /** @return Row position of the cursor after change */
-           long getScreenY();
+        /** @return Position of cursor in ViewModel */
+    	ViewCursorPosition getCursorPosition();
     }
 
 }

@@ -1,13 +1,19 @@
 package com.happypeople.vi;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** This class models the visible screen.
  * All in all, it is a Deque<ScreenLine>
  */
 public class ScreenModel {
+	private final static Logger log=LoggerFactory.getLogger(ScreenModel.class);
+
 	/** Number of visible lines on screen, iE sum(screenArray[0-n].getNumScreenLines()) */
 	private long screenLineCount=0;
 
@@ -76,6 +82,25 @@ public class ScreenModel {
 	 */
 	public String render(final int idx, final int lengthLimit) {
 		return screenArray.get(idx).render(lengthLimit);
+	}
+
+	public ScreenCursorPosition calcScreenCursorPosition(final ViewCursorPosition viewCursorPos) {
+		int idx=0;
+		int linesAboveCursor=0;
+		final Iterator<ScreenLine> iter=screenArray.iterator();
+		while(idx<viewCursorPos.getY() && iter.hasNext()) {
+			idx++;
+			final ScreenLine screenLine=iter.next();
+			linesAboveCursor+=screenLine.getNumScreenLines();
+		}
+		if(iter.hasNext()) {
+			final ScreenLine lineUnderCursor=iter.next(); // TODO check if iter.hasNext()
+			final ScreenCursorPosition posInLine=lineUnderCursor.getScreenPos(viewCursorPos.getX());
+			log.info("posInLine: "+posInLine);
+			return posInLine.addY(linesAboveCursor);
+		} else { // should not happen, but does
+			return ScreenCursorPosition.ORIGIN;
+		}
 	}
 
 	public static class ScreenModelChangedEvent {

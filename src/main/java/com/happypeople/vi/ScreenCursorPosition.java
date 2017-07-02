@@ -3,7 +3,9 @@ package com.happypeople.vi;
 /** Used for cursor positioning on screen
  */
 public class ScreenCursorPosition extends CursorPosition<ScreenCursorPosition> {
-	public ScreenCursorPosition(final long x, final long y) {
+	public static final ScreenCursorPosition ORIGIN = new ScreenCursorPosition(0, 0);
+
+	private ScreenCursorPosition(final long x, final long y) {
 		super(x, y);
 	}
 

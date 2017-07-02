@@ -63,7 +63,7 @@ public class CursorModelImpl implements CursorModel {
 			// line at cPosY could be shorter than the old line, ie
 			// the cursor can not be displayed at position cPosX because
 			// the line is simply not that long.
-			// This behaviour is implemented in the renderer, which displays
+			// This behavior is implemented in the renderer, which displays
 			// the cursor in this case at the end of the line.
 			fireCursorPosition(cursorPos);
 		}
@@ -119,13 +119,8 @@ public class CursorModelImpl implements CursorModel {
 	protected void fireCursorPosition(final ViewCursorPosition pos) {
 		fireCursorPosition(new CursorPositionChangedEvent() {
 			@Override
-			public long getScreenX() {
-				return pos.getX();
-			}
-
-			@Override
-			public long getScreenY() {
-				return pos.getY();
+			public ViewCursorPosition getCursorPosition() {
+				return pos;
 			}
 		});
 	}
