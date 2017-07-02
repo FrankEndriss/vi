@@ -48,6 +48,7 @@ public class ScreenModel {
 		screenLineCount+=mapping.getNumScreenLines();
 		fireChanged();
 	}
+
 	public void removeBottom() {
 		final ScreenLine line=screenArray.pollLast();
 		if(line!=null)

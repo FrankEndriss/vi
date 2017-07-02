@@ -73,7 +73,6 @@ public class AwtView implements View {
 	private final ScreenModel screenModel;
 
 	/** TODO add a "addKeyEventListener(...)" method, to get rid of the
-	 * TODO change LinesModel to ScreenModel
 	 * constructor arg keyEventTarget.
 	 * @param linesModel the data to display on screen
 	 * @param keyEventTarget queue where key events are added, should be removed, and wired on the caller side
@@ -179,7 +178,7 @@ public class AwtView implements View {
 		t.start();
 
 		frame.setSize(400, 400);
-		frame.setLocation(100, 100);
+		frame.setLocation(600, 100);
 		frame.setResizable(true);
 		frame.setBackground(COLOR_BACKGROUND);
 		frame.setVisible(true);
@@ -199,9 +198,15 @@ public class AwtView implements View {
 
 	private final static Color COLOR_BACKGROUND=Color.BLACK;
 
-	private class ScreenBuffer {
+	private final static class FontData {
+		public Font font;
+		public FontMetrics fontMetrics;
+		public int lineHeight;
+		public int colWidht;
+	}
 
-		private final Font font=new Font("monospaced", Font.PLAIN, 15);
+	private class ScreenBuffer {
+		private FontData fontData;
 
 		/** Lock used to synchronize acess to image. */
 		private final Object imageLock=new Object();
@@ -213,29 +218,46 @@ public class AwtView implements View {
 		/** Size in lines, not pixels. */
 		private int sizeLines=0;
 
+		ScreenBuffer() {
+			setFont(new Font("monospaced", Font.PLAIN, 15));
+		}
+
+		public void setFont(final Font font) {
+			final BufferedImage tmpImage=new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
+			final Graphics2D g=tmpImage.createGraphics();
+			final FontData fontData=new FontData();
+			fontData.font=font;
+			fontData.fontMetrics=g.getFontMetrics(font);
+			fontData.lineHeight=Math.max(1, fontData.fontMetrics.getHeight());
+			fontData.colWidht=Math.max(1, fontData.fontMetrics.stringWidth("0123456789abcdef")/16);
+			this.fontData=fontData;
+		}
+
 		public void resize(final int width, final int height) {
 			log.info("resize, pixels, width="+width+" height="+height);
-			final BufferedImage newImage=new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-			final Graphics2D g=newImage.createGraphics();
-			g.setColor(COLOR_BACKGROUND);
-			g.fillRect(0, 0, width, height);
+			final int newSizeColumns=Math.max(1, width/fontData.colWidht);
+			final int newSizeLines=Math.max(1, height/fontData.lineHeight);
 
-			synchronized(imageLock) {
-				final int intersectX=Math.min(width, image.getWidth());
-				final int intersectY=Math.min(height, image.getHeight());
-				g.drawImage(image,
-					0, 0, intersectX, intersectY,
-					0, 0, intersectX, intersectY,
-					null);
-				image=newImage;
+			if(newSizeColumns!=sizeColumns || newSizeLines!=sizeLines) {
+				log.info("really resize, cols/width="+newSizeColumns+" lines/height="+newSizeLines);
+				final BufferedImage newImage=new BufferedImage(
+						newSizeColumns*fontData.colWidht, newSizeLines*fontData.lineHeight, BufferedImage.TYPE_INT_RGB);
+				final Graphics2D g=newImage.createGraphics();
+				g.setColor(COLOR_BACKGROUND);
+				g.fillRect(0, 0, newImage.getWidth(), newImage.getHeight());
+
+				synchronized(imageLock) {
+					final int intersectX=Math.min(newImage.getWidth(), image.getWidth());
+					final int intersectY=Math.min(newImage.getHeight(), image.getHeight());
+					g.drawImage(image,
+						0, 0, intersectX, intersectY,
+						0, 0, intersectX, intersectY,
+						null);
+					image=newImage;
+					sizeColumns=newSizeColumns;
+					sizeLines=newSizeLines;
+				}
 			}
-
-			final FontMetrics fm=g.getFontMetrics(font);
-			final int lineHeight=fm.getHeight()+fm.getDescent();
-			final int colWidth=fm.stringWidth("0123456789abcdef")/16;
-			sizeLines=height/lineHeight;
-			sizeColumns=width/colWidth;
-			log.info("resize, logical width="+sizeColumns+" height="+sizeLines);
 		}
 
 		/** This methods simply paints the buffer image to target.
@@ -252,7 +274,7 @@ public class AwtView implements View {
 			}
 		}
 
-		/** Creates in place iterator for
+		/** Creates inplace iterator for
 		 * @param str source string
 		 * @param maxLen len of chunks of str
 		 * @return Iterable to iterator over parts of str of max len maxLen
@@ -265,13 +287,13 @@ public class AwtView implements View {
 					return new Iterator<String>() {
 						@Override
 						public boolean hasNext() {
-							return idx<str.length();
+							return idx==0 || idx<str.length();
 						}
 						@Override
 						public String next() {
 							final int len=Math.min(str.length()-idx, maxLen);
 							final String split=str.substring(idx, idx+len);
-							idx+=len;
+							idx+=Math.max(1, len);
 							return split;
 						}
 					};
@@ -281,40 +303,38 @@ public class AwtView implements View {
 
 		public void render() {
 
-			final long callStart=System.currentTimeMillis();
 			final Graphics2D g=image.createGraphics();
-			g.setFont(font);
+			g.setFont(fontData.font);
 
-			final FontMetrics fm=g.getFontMetrics(font);
-
-			int lineNo=0;
-			int baselinePx=0;
-			final int lineHeight=fm.getHeight()+fm.getDescent();
+			int baselinePx=fontData.fontMetrics.getMaxAscent(); // baseline of first line
 
 			// TODO optimize to draw only what is inside g.getClipBounds();
 
 			final int lengthLimit=sizeLines*sizeColumns;
 
-			while(baselinePx<image.getHeight() && lineNo<screenModel.getDataLineCount()) {
-				final String logicalLine=screenModel.render(lineNo, lengthLimit);
+			int logicalLineNo=0;
+			int screenLineNo=0;
+			int linestartPx=0;
+			while(baselinePx<image.getHeight() && logicalLineNo<screenModel.getDataLineCount()) {
+				final String logicalLine=screenModel.render(logicalLineNo, lengthLimit);
 
 				for(final String screenLine : split2line(logicalLine, sizeColumns)) {
 
-					baselinePx+=lineHeight;
 					// calc real Position. cPosX can be after the end of line. In this case we
 					// display the cursor at the last char of the line.
 					// If the line is empty we position the cursor at lCPosX=0
 					final long lCPosX= cPosX<screenLine.length() ? cPosX : (screenLine.length()-1<0? 0 : screenLine.length()-1);
 
-					// TODO wrap lines longer than getWidth()
-					//fm.stringWidth(str);
-
 					// redraw background
-					g.setColor(Color.BLACK);
-					g.fillRect(0, baselinePx-lineHeight, image.getWidth(), lineHeight);
+					g.setColor(COLOR_BACKGROUND);
+					g.fillRect(0, linestartPx, image.getWidth(), fontData.lineHeight);
 					g.setColor(Color.WHITE);
 
-					if(cPosY==lineNo && (((System.currentTimeMillis()-cTime)/C_BLINK_MILLIES)&0x1)==0) { // cursor visible blink phase
+					// simply draw the string
+					g.drawString(screenLine, 0, baselinePx);
+
+					/*
+					if(cPosY==screenLineNo && (((System.currentTimeMillis()-cTime)/C_BLINK_MILLIES)&0x1)==0) { // cursor visible blink phase
 						// split the line in the part before the cursor, the cursor, and the part after the cursor
 						int cursorXoffset=0;
 
@@ -344,9 +364,24 @@ public class AwtView implements View {
 						// simply draw the line string
 						g.drawString(screenLine, 0, baselinePx-fm.getDescent());
 					}
+					*/
+					baselinePx+=fontData.lineHeight;
+					linestartPx+=fontData.lineHeight;
+					screenLineNo++;
 				}
-				lineNo++;
+				logicalLineNo++;
 			}
+			// draw fillers until end of screen
+			while(screenLineNo<getSizeLines()) {
+				g.setColor(COLOR_BACKGROUND);
+				g.fillRect(0, linestartPx, image.getWidth(), fontData.lineHeight);
+				g.setColor(Color.WHITE);
+				g.drawString("~", 0, baselinePx);
+				baselinePx+=fontData.lineHeight;
+				linestartPx+=fontData.lineHeight;
+				screenLineNo++;
+			}
+
 			// trigger repaint int AWT-Thread
 			paintingArea.repaint();
 		}

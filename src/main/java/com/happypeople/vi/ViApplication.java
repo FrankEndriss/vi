@@ -26,6 +26,15 @@ public class ViApplication {
 
 		System.out.println("args: "+Arrays.asList(args));
 
+		try {
+			runTheApp(context);
+		}catch(final Exception e) {
+			log.error("some error, main thread ended: ", e);
+		}
+	}
+
+	public static void runTheApp(final ConfigurableApplicationContext context) {
+
 		final AwtViewFactory awtViewFactory=context.getBean(AwtViewFactory.class);
 		final LinesModelFactory linesModelFactory=context.getBean(LinesModelFactory.class);
 		final ViewModelFactory viewModelFactory=context.getBean(ViewModelFactory.class);

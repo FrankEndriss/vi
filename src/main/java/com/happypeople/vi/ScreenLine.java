@@ -58,17 +58,18 @@ class ScreenLine {
 	/** Calculates the display position of a char of a line.
 	 * This position is not equal to the position of the char
 	 * in the string since some chars are displayed using more
-	 * than one space. iE TAB, or other special chars.
+	 * than one space. ie TAB, or other special chars.
 	 * @param logicalX the position of the char in the lines String
-	 * @return The position of the char on display, without
-	 * considering linebreaks.
+	 * @return The position of the char on display, without considering linebreaks.
 	 */
 	public long getDisplayX(final long logicalX) {
-		long pos=0;
+		if(getLine().length()==0)
+			return 0;
+		long pos=-1;
 		final String line=getLine();
-		for(int cidx=0; cidx<logicalX && cidx<line.length(); cidx++) {
+		for(int cidx=0; cidx<=logicalX && cidx<line.length(); cidx++) {
 			if(line.charAt(cidx)=='\t')
-				pos=calcTabPos(pos);
+				pos=calcTabPos(pos<0?0:pos);
 			else
 				pos++;
 		}
@@ -86,8 +87,9 @@ class ScreenLine {
 		for(final char c : line.toCharArray()) {
 			if(c=='\t') {
 				pos=calcTabPos(pos);
-				while(sb.length()<pos)
+				do {
 					sb.append('\b');
+				} while(sb.length()<=pos);
 			} else { // TODO do something with non printable chars
 				pos++;
 				sb.append(c);
@@ -105,12 +107,16 @@ class ScreenLine {
 
 	private final static long TAB_SIZE=4;
 
-	/**
+	/** Calculates the next tab ending position starting at pos.
+	 * So this is, if there is a TAB at position pos, this
+	 * method returns the position where the cursor blinks.
+	 * 0:3, 1:3, 2:3, 3:3, 4:7, ...
 	 * @param pos x position of cursor
 	 * @return x position of cursor if tab added
 	 */
-	private long calcTabPos(long pos) {
-		while((pos++%4)!=0);
+	public long calcTabPos(long pos) {
+		while(((pos+1)%TAB_SIZE)!=0)
+			pos++;
 		return pos;
 	}
 }

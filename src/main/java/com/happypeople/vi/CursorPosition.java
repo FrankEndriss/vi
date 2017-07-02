@@ -38,4 +38,22 @@ public abstract class CursorPosition<E extends CursorPosition<E>> {
 	public E setY(final long Y) {
 		return addY(x-getY());
 	}
+
+	@Override
+	public boolean equals(final Object other) {
+		return	other!=null &&
+				other instanceof CursorPosition &&
+				getX()==((CursorPosition<?>)other).getX() &&
+				getY()==((CursorPosition<?>)other).getY();
+	}
+
+	@Override
+	public int hashCode() {
+		return Long.valueOf(x+y).hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName()+": x="+getX()+" y="+getY();
+	}
 }
