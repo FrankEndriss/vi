@@ -14,6 +14,7 @@ public interface View extends LinesModelChangedEventListener, CursorPositionChan
 	}
 
 	/** Add a Observer wich is called whenever the size of the view changes.
+	 * The first call to listener is done synchronously.
 	 * @param listener
 	 */
 	public void addViewSizeChangedEventListener(ViewSizeChangedEventListener listener);

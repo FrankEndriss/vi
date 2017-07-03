@@ -10,6 +10,6 @@ public class ViewModelFactory {
 	private ApplicationContext context;
 
 	public ViewModel createViewModel(final LinesModel linesModel, final ScreenModel screenModel) {
-		return context.getBean(SimpleViewModelImpl.class, 80, 25, linesModel, screenModel);
+		return context.getBean(SimpleViewModelImpl.class, linesModel, screenModel);
 	}
 }

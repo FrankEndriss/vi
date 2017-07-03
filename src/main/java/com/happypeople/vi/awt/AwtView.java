@@ -442,17 +442,7 @@ public class AwtView implements View {
 	}
 
 	protected void fireViewSizeChanged(final int sizeX, final int sizeY) {
-		final ViewSizeChangedEvent evt=new ViewSizeChangedEvent() {
-			@Override
-			public int getSizeX() {
-				return sizeX;
-			}
-
-			@Override
-			public int getSizeY() {
-				return sizeY;
-			}
-		};
+		final ViewSizeChangedEvent evt=createEvent(sizeX, sizeY);
 
 		for(final ViewSizeChangedEventListener listener : viewSizeChangedEventListeners)
 			listener.viewSizeChanged(evt);
@@ -461,5 +451,20 @@ public class AwtView implements View {
 	@Override
 	public void addViewSizeChangedEventListener(final ViewSizeChangedEventListener listener) {
 		viewSizeChangedEventListeners.add(listener);
+		listener.viewSizeChanged(createEvent(screenBuffer.getSizeColumns(), screenBuffer.getSizeLines()));
+	}
+	
+	private ViewSizeChangedEvent createEvent(int x, int y) {
+		return new ViewSizeChangedEvent() {
+			@Override
+			public int getSizeX() {
+				return x;
+			}
+
+			@Override
+			public int getSizeY() {
+				return y;
+			}
+		};
 	}
 }

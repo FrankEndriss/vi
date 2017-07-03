@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import com.happypeople.vi.View.ViewSizeChangedEvent;
 
 /** Simple implementation.
- * Fixed Size window
  */
 @Component
 @Scope("prototype")
@@ -27,17 +26,17 @@ public class SimpleViewModelImpl implements ViewModel {
 	/** Index of first line of linesModel displayed in window */
 	private long firstLine=0;
 
-	/** Window size in lines */
-	private int sizeX;
-	private int sizeY;
+	/** Window size in cols/lines */
+	private int sizeX=1;
+	private int sizeY=1;
 
 	/** Listeners */
 	private final Set<FirstLineChangedEventListener> flceListeners=new HashSet<>();
 
-	public SimpleViewModelImpl(final int sizeX, final int sizeY, final LinesModel linesModel, final ScreenModel screenModel) {
+	public SimpleViewModelImpl(final LinesModel linesModel, final ScreenModel screenModel) {
 		this.linesModel=linesModel;
 		this.screenModel=screenModel;
-		setScreenSize(sizeX, sizeY);
+		//setScreenSize(sizeX, sizeY);
 	}
 
 	private void setScreenSize(final int x, final int y) {
@@ -75,21 +74,21 @@ public class SimpleViewModelImpl implements ViewModel {
 
 	@Override
 	public boolean scrollUp(final long scrollUpLines) {
+		if(scrollUpLines==0)
+			return true;
+
 		if(scrollUpLines>firstLine) // scroll up before first line not possible
 			return false;
 
 		if((-scrollUpLines)+firstLine>linesModel.getSize()) // scroll down after last line not possible
 			return false;
 
-		if(scrollUpLines==0)
-			return true;
-
 		if(scrollUpLines>0) {
 			for(long i=0; i<scrollUpLines; i++) {
 				screenModel.insertTop(linesModel.get(firstLine-i-1));
 			}
 		} else {
-			long bottomLineIdx=firstLine+screenModel.getDataLineCount();
+			long bottomLineIdx=firstLine+screenModel.getDataLineCount()-1;
 			for(long i=0; i<-scrollUpLines; i++) {
 				screenModel.insertBottom(linesModel.get(bottomLineIdx));
 				bottomLineIdx++;
