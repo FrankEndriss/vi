@@ -147,4 +147,9 @@ public class SimpleViewModelImpl implements ViewModel {
 	public void viewSizeChanged(final ViewSizeChangedEvent evt) {
 		setScreenSize(evt.getSizeX(), evt.getSizeY());
 	}
+
+	@Override
+	public long getMaxLogicalScreenLineIdx() {
+		return screenModel.getDataLineCount()-1;
+	}
 }

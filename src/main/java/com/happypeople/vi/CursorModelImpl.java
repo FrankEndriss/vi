@@ -84,8 +84,14 @@ public class CursorModelImpl implements CursorModel {
 		// TODO Things to check:
 		// *Is the cursor on the last line of the ViewModel?
 		//   -> need to scroll view down
+		final ViewCursorPosition newPos=cursorPos.addY(lines);	// new position
+		final long idxOfLastVisibleLine=viewModel.getMaxLogicalScreenLineIdx();
+		if(newPos.getY()>idxOfLastVisibleLine) {
+			if(!viewModel.scrollUp(idxOfLastVisibleLine-newPos.getY()))
+				return; // not possible to do the move/scroll
+		}
 
-		cursorPos=cursorPos.addY(lines);
+		cursorPos=newPos;
 		fireCursorPosition(cursorPos);
 	}
 

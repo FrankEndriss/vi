@@ -3,6 +3,8 @@ package com.happypeople.vi;
 import java.awt.event.KeyEvent;
 import java.util.concurrent.BlockingQueue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -57,8 +59,10 @@ public class ViController implements KeyTypedController {
 	/** Strategy for standard VI mode, like move using <h>, <j>, <k> and <l>
 	 */
 	private class ModeStrategy_VI_MODE implements ModeStrategy {
+		private final Logger log=LoggerFactory.getLogger(ModeStrategy_VI_MODE.class);
 		public ModeStrategy keyTyped(KeyEvent keyEvent) {
 			final char c=keyEvent.getKeyChar();
+			log.info("command char: "+keyEvent.getKeyChar());
 			switch(c)  {
 				// Simple cursor movement
 				case 'h':	cursorModel.moveCursorLeft(1); break;

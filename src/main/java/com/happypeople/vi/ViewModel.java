@@ -41,4 +41,9 @@ public interface ViewModel extends ViewSizeChangedEventListener {
      * @return calculated cursor position in data model
      */
     ScreenCursorPosition getScreenPositionFromViewPosition(ViewCursorPosition cpos);
+
+	/**
+	 * @return the index of the last logical line visible on screen
+	 */
+	public long getMaxLogicalScreenLineIdx();
 }

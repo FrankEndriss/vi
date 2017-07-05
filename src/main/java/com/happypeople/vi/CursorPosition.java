@@ -35,8 +35,8 @@ public abstract class CursorPosition<E extends CursorPosition<E>> {
 		return addX(x-getX());
 	}
 
-	public E setY(final long Y) {
-		return addY(x-getY());
+	public E setY(final long y) {
+		return addY(y-getY());
 	}
 
 	@Override

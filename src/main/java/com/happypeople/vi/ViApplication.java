@@ -46,6 +46,7 @@ public class ViApplication {
 		// TODO parse args
 
 		final LinesModelEditor linesModel=linesModelFactory.createEmpty();
+
 		log.info("linesModel="+linesModel);
 
 		// remove for testing
@@ -54,6 +55,8 @@ public class ViApplication {
 		linesModel.insertAfter(1, "thirdLine is longer...and next is an empty line");
 		linesModel.insertAfter(2, "");
 		linesModel.insertAfter(3, "last (fifth) line");
+		for(int i=4; i<100; i++) 
+			linesModel.insertAfter(i, "another..."+i);
 
 		final ScreenModel screenModel=new ScreenModel();
 		final View view= awtViewFactory.createAwtView(screenModel, inputQueue);
