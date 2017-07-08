@@ -23,7 +23,7 @@ public interface CursorModel extends ViewSizeChangedEventListener {
 	 */
 	void moveCursorLeft(int chars);
 
-	void addCursorPositionChangedEventListener(CursorPositionChangedEventListener listener);
+	//void addCursorPositionChangedEventListener(CursorPositionChangedEventListener listener);
 
     /** change cursor position on screen */
     public interface CursorPositionChangedEvent {

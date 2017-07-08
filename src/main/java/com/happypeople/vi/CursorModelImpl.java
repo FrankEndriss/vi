@@ -1,8 +1,5 @@
 package com.happypeople.vi;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -11,10 +8,9 @@ import com.happypeople.vi.View.ViewSizeChangedEvent;
 @Component
 @Scope("prototype")
 public class CursorModelImpl implements CursorModel {
-	private final Set<CursorPositionChangedEventListener> cpceListeners=new HashSet<>();
+	//private final Set<CursorPositionChangedEventListener> cpceListeners=new HashSet<>();
 
-	// Cursor position in ViewModel
-	private ViewCursorPosition cursorPos=ViewCursorPosition.ORIGIN;
+	private DataCursorPosition cursorPos=DataCursorPosition.ORIGIN;
 
 	private int sizeX=0;
 	private int sizeY=0;
@@ -39,6 +35,8 @@ public class CursorModelImpl implements CursorModel {
 
 	@Override
 	public void moveCursorUp(final int lines) {
+		cursorPos=viewModel.moveCursorUp(cursorPos, lines);
+		/*
 		// number of lines we need to scroll the window up
 		if(lines<0) {
 			moveCursorDown(-lines);
@@ -92,7 +90,8 @@ public class CursorModelImpl implements CursorModel {
 		}
 
 		cursorPos=newPos;
-		fireCursorPosition(cursorPos);
+		viewModel.dataCursorPositionChanged(cursorPos);
+		*/
 	}
 
 	/* We need to make sure that the cursor position does not move "out-of-range",
@@ -105,8 +104,7 @@ public class CursorModelImpl implements CursorModel {
 		if(newPosX<0)
 			newPosX=0;
 		else { // check if right of end of line
-			final DataCursorPosition dataPos=viewModel.getDataPositionFromViewPosition(cursorPos.setX(newPosX));
-			final String line=linesModel.get(dataPos.getY());
+			final String line=linesModel.get(cursorPos.getY());
 			System.out.println("line under cursor: "+line);
 			if(newPosX>line.length()-1)
 				newPosX=line.length()-1;
@@ -114,9 +112,10 @@ public class CursorModelImpl implements CursorModel {
 				newPosX=0;
 		}
 		cursorPos=cursorPos.setX(newPosX);
-		fireCursorPosition(cursorPos);
+		viewModel.cursorPositionChanged(cursorPos);
 	}
 
+	/*
 	@Override
 	public void addCursorPositionChangedEventListener(final CursorPositionChangedEventListener listener) {
 		cpceListeners.add(listener);
@@ -135,10 +134,13 @@ public class CursorModelImpl implements CursorModel {
 		for(final CursorPositionChangedEventListener listener : cpceListeners)
 			listener.cursorPositionChanged(evt);
 	}
+	*/
 
 	@Override
 	public void viewSizeChanged(final ViewSizeChangedEvent evt) {
 		this.sizeX=evt.getSizeX();
 		this.sizeY=evt.getSizeY();
+		// TODO take care if the cursor is still on screen
+		viewModel.viewSizeChanged(evt);
 	}
 }

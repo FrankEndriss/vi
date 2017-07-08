@@ -3,7 +3,9 @@ package com.happypeople.vi;
 /** Used to express cursor position in the data model, iE line, column
  */
 public class DataCursorPosition extends CursorPosition<DataCursorPosition> {
-	public DataCursorPosition(final long x, final long y) {
+	public final static DataCursorPosition ORIGIN=new DataCursorPosition(0, 0);
+
+	private DataCursorPosition(final long x, final long y) {
 		super(x, y);
 	}
 

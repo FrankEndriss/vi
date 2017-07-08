@@ -1,7 +1,7 @@
 package com.happypeople.vi;
 
-public interface View extends LinesModelChangedEventListener, CursorPositionChangedEventListener, FirstLineChangedEventListener {
-	
+public interface View extends ScreenModelChangedEventListener {
+
 	interface ViewSizeChangedEvent {
 		/** @return new number of columns */
 		public int getSizeX();
@@ -18,5 +18,11 @@ public interface View extends LinesModelChangedEventListener, CursorPositionChan
 	 * @param listener
 	 */
 	public void addViewSizeChangedEventListener(ViewSizeChangedEventListener listener);
+
+	/** Sets the view visible/invisible.
+	 * Optional, for some views this might not make sense.
+	 * @param visible
+	 */
+	public void setVisible(boolean visible);
 
 }

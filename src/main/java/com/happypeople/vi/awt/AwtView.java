@@ -24,15 +24,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.happypeople.vi.CursorModel.CursorPositionChangedEvent;
-import com.happypeople.vi.LinesModelEditor.LinesModelChangedEvent;
 import com.happypeople.vi.ScreenCursorPosition;
 import com.happypeople.vi.ScreenModel;
-import com.happypeople.vi.ScreenModel.ScreenModelChangedEvent;
-import com.happypeople.vi.ScreenModel.ScreenModelChangedEventListener;
+import com.happypeople.vi.ScreenModelChangedEvent;
 import com.happypeople.vi.View;
-import com.happypeople.vi.ViewCursorPosition;
-import com.happypeople.vi.ViewModel.FirstLineChangedEvent;
 
 /** How painting should be done:
  * The input controller gets commands by the user (AWT-Thread), and triggers changes to the model Objects (VI-Thread)
@@ -61,7 +56,7 @@ public class AwtView implements View {
 	private final Set<ViewSizeChangedEventListener> viewSizeChangedEventListeners=new HashSet<>();
 
 	/** current view cursor position */
-	private ViewCursorPosition cPos=ViewCursorPosition.ORIGIN;
+	private final ScreenCursorPosition sPos=ScreenCursorPosition.ORIGIN;
 
 	/** Timestamp blinking cursor was set to visible state (happens on every cursor movement) */
 	private long cTime=System.currentTimeMillis();
@@ -70,30 +65,17 @@ public class AwtView implements View {
 
 	private final ScreenBuffer screenBuffer=new ScreenBuffer();
 
-	private final ScreenModel screenModel;
+	//private final ScreenModel screenModel;
+
+	private final JFrame frame;
 
 	/** TODO add a "addKeyEventListener(...)" method, to get rid of the
 	 * constructor arg keyEventTarget.
 	 * @param linesModel the data to display on screen
 	 * @param keyEventTarget queue where key events are added, should be removed, and wired on the caller side
 	 */
-	public AwtView(final ScreenModel screenModel, final BlockingQueue<KeyEvent> keyEventTarget) {
-		// some special hook
-		//System.setProperty("sun.awt.noerasebackground", "true");
-
-		this.screenModel=screenModel;
-
-		screenModel.addScreenModelChangedEventListener(new ScreenModelChangedEventListener() {
-			@Override
-			public void screenModelChanged(final ScreenModelChangedEvent evt) {
-				// TODO set hint what changed, render only what changed
-				// Probably in optimized way
-				screenBuffer.render();
-			}
-		});
-
-		final JFrame frame=new JFrame("vi");
-
+	public AwtView(final BlockingQueue<KeyEvent> keyEventTarget) {
+		this.frame=new JFrame("vi");
 		frame.addWindowListener(new CloseTheWindowListener(frame));
 
 		paintingArea=new AwtViewPanel();
@@ -169,7 +151,7 @@ public class AwtView implements View {
 					} else {
 						nextWakeup+=C_BLINK_MILLIES;
 						// TODO call screenBuffer.cursorRender() to do optimized rendering
-						screenBuffer.render();
+						screenBuffer.renderCursor();
 					}
 				}
 			}
@@ -182,6 +164,11 @@ public class AwtView implements View {
 		frame.setResizable(true);
 		frame.setBackground(COLOR_BACKGROUND);
 		frame.setVisible(true);
+	}
+
+	@Override
+	public void setVisible(final boolean visible) {
+		frame.setVisible(visible);
 	}
 
 	/** This is the actual painting surface
@@ -206,6 +193,7 @@ public class AwtView implements View {
 	}
 
 	private class ScreenBuffer {
+		/** Immutable Datastructure used to hold Font related values. */
 		private FontData fontData;
 
 		/** Lock used to synchronize acess to image. */
@@ -301,7 +289,12 @@ public class AwtView implements View {
 			};
 		}
 
-		public void render() {
+		public void renderCursor() {
+			// TODO render the cursor, most likely its blinking state has changed
+		}
+
+		public void render(final ScreenModelChangedEvent evt) {
+			final ScreenModel screenModel=evt.getSource();
 
 			final Graphics2D g=image.createGraphics();
 			g.setFont(fontData.font);
@@ -384,10 +377,9 @@ public class AwtView implements View {
 
 			// draw the cursor
 			if((((System.currentTimeMillis()-cTime)/C_BLINK_MILLIES)&0x1)==0) { // cursor visible blink phase
-				final ScreenCursorPosition scPos=screenModel.calcScreenCursorPosition(cPos);
-				log.info("scPos: "+scPos);
-				final long lineStartPx=fontData.lineHeight*scPos.getY();
-				final long colStartPx=fontData.colWidht*scPos.getX();
+				log.info("sPos: "+sPos);
+				final long lineStartPx=fontData.lineHeight*sPos.getY();
+				final long colStartPx=fontData.colWidht*sPos.getX();
 
 				final int rgbWhite=Color.WHITE.getRGB();
 				// draw every white pixel in BLACK and all others in WHITE
@@ -419,26 +411,12 @@ public class AwtView implements View {
 		nextWakeup=cTime+C_BLINK_MILLIES;
 	}
 
+	/* ScreenModelChangedEventListener implementation */
 	@Override
-	public void changedEvent(final LinesModelChangedEvent evt) {
+	public void screenModelChanged(final ScreenModelChangedEvent evt) {
 		resetCTime();
-		// TODO render only the changed lines
-		screenBuffer.render();
-	}
-
-	@Override
-	public void cursorPositionChanged(final CursorPositionChangedEvent evt) {
-		resetCTime();
-		cPos=evt.getCursorPosition();
-		// TODO repaint only the cursor
-		log.info("new cursor position, x="+cPos.getX()+", y="+cPos.getY());
-		screenBuffer.render();
-	}
-
-	@Override
-	public void firstLineChanged(final FirstLineChangedEvent evt) {
-		resetCTime();
-		screenBuffer.render();
+		// TODO render only the changed lines, optimize rendering
+		screenBuffer.render(evt);
 	}
 
 	protected void fireViewSizeChanged(final int sizeX, final int sizeY) {
@@ -453,8 +431,8 @@ public class AwtView implements View {
 		viewSizeChangedEventListeners.add(listener);
 		listener.viewSizeChanged(createEvent(screenBuffer.getSizeColumns(), screenBuffer.getSizeLines()));
 	}
-	
-	private ViewSizeChangedEvent createEvent(int x, int y) {
+
+	private ViewSizeChangedEvent createEvent(final int x, final int y) {
 		return new ViewSizeChangedEvent() {
 			@Override
 			public int getSizeX() {

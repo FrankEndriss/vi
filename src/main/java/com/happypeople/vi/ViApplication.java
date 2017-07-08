@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import com.happypeople.vi.awt.AwtView;
 import com.happypeople.vi.awt.AwtViewFactory;
 
 //import org.springframework.boot.SpringApplication;
@@ -55,24 +56,22 @@ public class ViApplication {
 		linesModel.insertAfter(1, "thirdLine is longer...and next is an empty line");
 		linesModel.insertAfter(2, "");
 		linesModel.insertAfter(3, "last (fifth) line");
-		for(int i=4; i<100; i++) 
+		for(int i=4; i<100; i++)
 			linesModel.insertAfter(i, "another..."+i);
 
-		final ScreenModel screenModel=new ScreenModel();
-		final View view= awtViewFactory.createAwtView(screenModel, inputQueue);
+//		final View view= awtViewFactory.createAwtView(screenModel, inputQueue);
+		final AwtView view= new AwtView(inputQueue);
+		final ScreenModel screenModel=new ScreenModelImpl();
+		screenModel.addScreenModelChangedEventListener(view);
 
-		final ViewModel viewModel=viewModelFactory.createViewModel(linesModel, screenModel);
-		view.addViewSizeChangedEventListener(viewModel);
+//		final ViewModel viewModel=viewModelFactory.createViewModel(linesModel, screenModel);
+		final ViewModel viewModel=new SimpleViewModelImpl(linesModel, screenModel);
 
 		final CursorModel cursorModel=cursorModelFactory.createCursorModel(linesModel, viewModel);
 		view.addViewSizeChangedEventListener(cursorModel);
-		final KeyTypedController controller=context.getBean(ViController.class, linesModel, cursorModel);
-
-		linesModel.addLinesModelChangedEventListener(view);
-		cursorModel.addCursorPositionChangedEventListener(view);
-		viewModel.addFirstLineChangedEventListener(view);
 
 		// run the application by accepting input
+		final KeyTypedController controller=context.getBean(ViController.class, linesModel, cursorModel);
 		controller.processInput(inputQueue);
 
 	}

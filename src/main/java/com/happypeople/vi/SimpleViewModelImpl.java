@@ -17,7 +17,7 @@ import com.happypeople.vi.View.ViewSizeChangedEvent;
 public class SimpleViewModelImpl implements ViewModel {
 	private final static Logger log=LoggerFactory.getLogger(SimpleViewModelImpl.class);
 
-	/** underlying data model */
+	/** line data source */
 	private final LinesModel linesModel;
 
 	/** display target */
@@ -31,12 +31,11 @@ public class SimpleViewModelImpl implements ViewModel {
 	private int sizeY=1;
 
 	/** Listeners */
-	private final Set<FirstLineChangedEventListener> flceListeners=new HashSet<>();
+	private final Set<ViewModelChangedEventListener> flceListeners=new HashSet<>();
 
 	public SimpleViewModelImpl(final LinesModel linesModel, final ScreenModel screenModel) {
 		this.linesModel=linesModel;
 		this.screenModel=screenModel;
-		//setScreenSize(sizeX, sizeY);
 	}
 
 	private void setScreenSize(final int x, final int y) {
@@ -102,29 +101,24 @@ public class SimpleViewModelImpl implements ViewModel {
 	}
 
 	@Override
-	public void addFirstLineChangedEventListener(final FirstLineChangedEventListener listener) {
+	public void addFirstLineChangedEventListener(final ViewModelChangedEventListener listener) {
 		flceListeners.add(listener);
 	}
 
 	protected void fireFirstLineChanged(final long newIdx) {
-		fireFirstLineChanged(new FirstLineChangedEvent() {
-			@Override
-			public long getFirstVisibleLine() {
-				return newIdx;
-			}
-		});
-	}
-	protected void fireFirstLineChanged(final FirstLineChangedEvent evt) {
-		for(final FirstLineChangedEventListener listener : flceListeners)
-			listener.firstLineChanged(evt);
+		final ViewModelChangedEvent evt=new ViewModelChangedEvent(newIdx);
+		for(final ViewModelChangedEventListener listener : flceListeners)
+			listener.viewModelChanged(evt);
 	}
 
+	/*
 	@Override
 	public DataCursorPosition getDataPositionFromViewPosition(final ViewCursorPosition cpos) {
 		// TODO take into account that long model lines are displayed in more than one screen line
 		// Tabulators occupy more than one column can be ignored here
 		return new DataCursorPosition(cpos.getX(), cpos.getY()+firstLine);
 	}
+	*/
 
 	@Override
 	public ScreenCursorPosition getScreenPositionFromViewPosition(final ViewCursorPosition cpos) {
@@ -152,4 +146,24 @@ public class SimpleViewModelImpl implements ViewModel {
 	public long getMaxLogicalScreenLineIdx() {
 		return screenModel.getDataLineCount()-1;
 	}
+
+	@Override
+	public void cursorPositionChanged(final DataCursorPosition pos) {
+		// TODO check if pos is prior to first line
+		// then scroll up
+		// or if pos is after last line
+		// then scroll down
+
+		final ViewCursorPosition vPos=ViewCursorPosition.ORIGIN.setX(pos.getX()).setY(pos.getY()-firstLine);
+		screenModel.cursorPositionChanged(vPos);
+	}
+
+	@Override
+	public DataCursorPosition moveCursorUp(final DataCursorPosition oldPos, final int lines) {
+		// TODO take into account TABs
+		// that is let the screenModel calc the screenCursorPosition, then move up on screen,
+		// then calc back the dataCursorPosition from that screen position.
+		return oldPos.addY(-lines);
+	}
+
 }
