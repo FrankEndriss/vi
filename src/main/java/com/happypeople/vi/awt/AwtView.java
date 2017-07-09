@@ -55,13 +55,17 @@ public class AwtView implements View {
 
 	private final Set<ViewSizeChangedEventListener> viewSizeChangedEventListeners=new HashSet<>();
 
-	/** current view cursor position */
-	private final ScreenCursorPosition sPos=ScreenCursorPosition.ORIGIN;
+	/** Last drawn screen cursor position.
+	 * TODO get rid of that, use formatted text in ScreenModel/ScreenLines instead.
+	 **/
+	private ScreenCursorPosition sPos=ScreenCursorPosition.ORIGIN;
 
 	/** Timestamp blinking cursor was set to visible state (happens on every cursor movement) */
 	private long cTime=System.currentTimeMillis();
 	/** Timestamp until that the cursor thread should wait before triggering a repaint. */
 	private long nextWakeup=cTime+C_BLINK_MILLIES;
+	/** this char is drawn while drawing the blinking cursor */
+	private String charUnderCursor=" ";
 
 	private final ScreenBuffer screenBuffer=new ScreenBuffer();
 
@@ -200,6 +204,7 @@ public class AwtView implements View {
 		private final Object imageLock=new Object();
 		/** The image buffer, initial dummy */
 		private BufferedImage image=new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+		private Graphics2D g=image.createGraphics();
 
 		/** Size in columns, not pixels. */
 		private int sizeColumns=0;
@@ -241,7 +246,8 @@ public class AwtView implements View {
 						0, 0, intersectX, intersectY,
 						0, 0, intersectX, intersectY,
 						null);
-					image=newImage;
+					this.image=newImage;
+					this.g=g;
 					sizeColumns=newSizeColumns;
 					sizeLines=newSizeLines;
 				}
@@ -289,14 +295,37 @@ public class AwtView implements View {
 			};
 		}
 
-		public void renderCursor() {
-			// TODO render the cursor, most likely its blinking state has changed
+		private void renderCursor() {
+			// render the cursor, most likely its blinking state has changed
+			final boolean cursorVisible=(((System.currentTimeMillis()-cTime)/C_BLINK_MILLIES)&0x1)==0;
+
+			final int lineStartPx=(int)(fontData.lineHeight*sPos.getY());
+			final int colStartPx=(int)(fontData.colWidht*sPos.getX());
+			log.info("rendering cursor at: "+colStartPx+":"+lineStartPx+" char:"+charUnderCursor+" visible:"+cursorVisible);
+			g.setColor(cursorVisible?Color.WHITE:Color.BLACK);
+			g.fillRect(colStartPx, lineStartPx, fontData.colWidht, fontData.lineHeight);
+
+			g.setColor(cursorVisible?Color.BLACK:Color.WHITE);
+			g.drawString(charUnderCursor, colStartPx, lineStartPx+fontData.fontMetrics.getMaxAscent());
+			paintingArea.repaint(colStartPx, lineStartPx, fontData.colWidht, fontData.lineHeight);
+
+			/*
+				final int rgbWhite=Color.WHITE.getRGB();
+				// draw every white pixel in BLACK and all others in WHITE
+				// note that this is highly ineffecient...
+				for(int pLine=lineStartPx; pLine<lineStartPx+fontData.lineHeight; pLine++) {
+					for(int pCol=colStartPx; pCol<colStartPx+fontData.colWidht; pCol++) {
+						g.setColor(image.getRGB(pCol, pLine)==rgbWhite?Color.BLACK:Color.WHITE); // invert Colors
+						g.fillRect(pCol, pLine, 1, 1);
+					}
+				}
+				*/
 		}
 
 		public void render(final ScreenModelChangedEvent evt) {
 			final ScreenModel screenModel=evt.getSource();
+			sPos=screenModel.getCursorPosition();
 
-			final Graphics2D g=image.createGraphics();
 			g.setFont(fontData.font);
 
 			int baselinePx=fontData.fontMetrics.getMaxAscent(); // baseline of first line
@@ -360,6 +389,12 @@ public class AwtView implements View {
 					*/
 					baselinePx+=fontData.lineHeight;
 					linestartPx+=fontData.lineHeight;
+					if(screenLineNo==sPos.getY()) {
+						if(screenLine.length()>sPos.getX())
+							charUnderCursor=screenLine.substring((int)sPos.getX(), (int)sPos.getX()+1);
+						else
+							charUnderCursor="\b";
+					}
 					screenLineNo++;
 				}
 				logicalLineNo++;
@@ -375,22 +410,7 @@ public class AwtView implements View {
 				screenLineNo++;
 			}
 
-			// draw the cursor
-			if((((System.currentTimeMillis()-cTime)/C_BLINK_MILLIES)&0x1)==0) { // cursor visible blink phase
-				log.info("sPos: "+sPos);
-				final long lineStartPx=fontData.lineHeight*sPos.getY();
-				final long colStartPx=fontData.colWidht*sPos.getX();
-
-				final int rgbWhite=Color.WHITE.getRGB();
-				// draw every white pixel in BLACK and all others in WHITE
-				// note that this is highly ineffecient...
-				for(int pLine=(int)lineStartPx; pLine<lineStartPx+fontData.lineHeight; pLine++) {
-					for(int pCol=(int)colStartPx; pCol<colStartPx+fontData.colWidht; pCol++) {
-						g.setColor(image.getRGB(pCol, pLine)==rgbWhite?Color.BLACK:Color.WHITE); // invert Colors
-						g.fillRect(pCol, pLine, 1, 1);
-					}
-				}
-			}
+			renderCursor();
 
 			// trigger repaint int AWT-Thread
 			paintingArea.repaint();
@@ -409,6 +429,13 @@ public class AwtView implements View {
 	private void resetCTime() {
 		cTime=System.currentTimeMillis();
 		nextWakeup=cTime+C_BLINK_MILLIES;
+	}
+
+	@Override
+	public void cusorPositionChanged(final ScreenModelChangedEvent evt) {
+		resetCTime();
+		// TODO render cursor only
+		screenBuffer.render(evt);
 	}
 
 	/* ScreenModelChangedEventListener implementation */
@@ -445,4 +472,5 @@ public class AwtView implements View {
 			}
 		};
 	}
+
 }

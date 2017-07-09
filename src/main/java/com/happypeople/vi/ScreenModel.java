@@ -51,14 +51,20 @@ public interface ScreenModel {
 	 */
 	String render(int idx, int lengthLimit);
 
-	//ScreenCursorPosition calcScreenCursorPosition(ViewCursorPosition viewCursorPos);
-
+	/** Add the listener to this screen model, ie the view instance
+	 * @param listener the view listening to this screen model
+	 */
 	void addScreenModelChangedEventListener(ScreenModelChangedEventListener listener);
 
-	/** Tell the screen model that the cursor position changed
+	/** Tell this screen model that the cursor position changed.
 	 * @param newPos the new position of the cursor. That position
 	 * is within getDataLineCount(), else may throw IllegalArgumentException
 	 */
 	void cursorPositionChanged(ViewCursorPosition newPos);
+
+	/** TODO get rid of this getter
+	 * @return the current cursor position
+	 */
+	ScreenCursorPosition getCursorPosition();
 
 }

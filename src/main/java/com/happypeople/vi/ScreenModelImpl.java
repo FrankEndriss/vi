@@ -94,6 +94,13 @@ public class ScreenModelImpl implements ScreenModel {
 	@Override
 	public void cursorPositionChanged(final ViewCursorPosition newPos) {
 		screenCursorPosition=calcScreenCursorPosition(newPos);
+		fireChanged();
+	}
+
+	// TODO get rid of this method
+	@Override
+	public ScreenCursorPosition getCursorPosition() {
+		return screenCursorPosition;
 	}
 
 	private ScreenCursorPosition calcScreenCursorPosition(final ViewCursorPosition viewCursorPos) {
