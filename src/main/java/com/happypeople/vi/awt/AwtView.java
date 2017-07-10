@@ -329,9 +329,6 @@ public class AwtView implements View {
 			g.setFont(fontData.font);
 
 			int baselinePx=fontData.fontMetrics.getMaxAscent(); // baseline of first line
-
-			// TODO optimize to draw only what is inside g.getClipBounds();
-
 			final int lengthLimit=sizeLines*sizeColumns;
 
 			int logicalLineNo=0;

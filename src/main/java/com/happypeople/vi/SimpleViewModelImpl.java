@@ -85,11 +85,15 @@ public class SimpleViewModelImpl implements ViewModel {
 		if(scrollUpLines>0) {
 			for(long i=0; i<scrollUpLines; i++) {
 				screenModel.insertTop(linesModel.get(firstLine-i-1));
+				while(screenModel.getScreenLineCount()>sizeY && screenModel.getDataLineCount()>1)
+					screenModel.removeBottom();
 			}
 		} else {
 			long bottomLineIdx=firstLine+screenModel.getDataLineCount()-1;
 			for(long i=0; i<-scrollUpLines; i++) {
 				screenModel.insertBottom(linesModel.get(bottomLineIdx));
+				while(screenModel.getScreenLineCount()>sizeY && screenModel.getDataLineCount()>1)
+					screenModel.removeTop();
 				bottomLineIdx++;
 			}
 		}
@@ -163,7 +167,25 @@ public class SimpleViewModelImpl implements ViewModel {
 		// TODO take into account TABs
 		// that is let the screenModel calc the screenCursorPosition, then move up on screen,
 		// then calc back the dataCursorPosition from that screen position.
-		return oldPos.addY(-lines);
+
+		final DataCursorPosition newPos=oldPos.addY(-lines);
+
+		if(newPos.getY()<0 || newPos.getY()>=linesModel.getSize())
+			return oldPos;
+
+		if(lines>0 && newPos.getY()<firstLine)  { // need to scroll up
+			if(!scrollUp(firstLine-newPos.getY()))
+				return oldPos;
+		} else if(lines<0) {
+			final long idxOfLastLineOnScreen=firstLine+screenModel.getDataLineCount()-1;
+			if(newPos.getY()>idxOfLastLineOnScreen) {
+				if(!scrollUp(idxOfLastLineOnScreen-newPos.getY()))
+					return oldPos;
+			}
+		}
+
+		cursorPositionChanged(newPos);
+		return newPos;
 	}
 
 }
