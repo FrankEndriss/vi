@@ -91,7 +91,7 @@ public class SimpleViewModelImpl implements ViewModel {
 		} else {
 			long bottomLineIdx=firstLine+screenModel.getDataLineCount()-1;
 			for(long i=0; i<-scrollUpLines; i++) {
-				screenModel.insertBottom(linesModel.get(bottomLineIdx));
+				screenModel.insertBottom(linesModel.get(bottomLineIdx+1));
 				while(screenModel.getScreenLineCount()>sizeY && screenModel.getDataLineCount()>1)
 					screenModel.removeTop();
 				bottomLineIdx++;
