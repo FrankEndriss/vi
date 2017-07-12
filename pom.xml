@@ -43,6 +43,13 @@
 			<artifactId>commons-collections4</artifactId>
 			<version>4.0</version>
 		</dependency>
+
+	<!-- JOptSimple for cli, see https://pholser.github.io/jopt-simple/index.html -->
+		<dependency>
+			<groupId>net.sf.jopt-simple</groupId>
+			<artifactId>jopt-simple</artifactId>
+			<version>4.9</version>
+		</dependency>
 	</dependencies>
 
 	<build>

@@ -14,6 +14,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 import com.happypeople.vi.awt.AwtView;
 import com.happypeople.vi.awt.AwtViewFactory;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+
 //import org.springframework.boot.SpringApplication;
 //import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -22,19 +25,28 @@ public class ViApplication {
 	private final static Logger log=LoggerFactory.getLogger(ViApplication.class);
 
 	public static void main(final String[] args) {
+		final OptionSet cliArgs=parseArgs(args);
+		
 		final ConfigurableApplicationContext context=
 				new SpringApplicationBuilder(ViApplication.class).headless(false).run(args);
 
 		System.out.println("args: "+Arrays.asList(args));
 
 		try {
-			runTheApp(context);
+			runTheApp(context, cliArgs);
 		}catch(final Exception e) {
 			log.error("some error, main thread ended: ", e);
 		}
 	}
+	
+	private static OptionSet parseArgs(final String[] args) {
+		final OptionParser parser=new OptionParser();
+		parser.accepts("R"); // readonly
+		
+		return parser.parse(args);
+	}
 
-	public static void runTheApp(final ConfigurableApplicationContext context) {
+	public static void runTheApp(final ConfigurableApplicationContext context, final OptionSet cliArgs) {
 
 		final AwtViewFactory awtViewFactory=context.getBean(AwtViewFactory.class);
 		final LinesModelFactory linesModelFactory=context.getBean(LinesModelFactory.class);
