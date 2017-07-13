@@ -12,18 +12,4 @@ public interface LinesModelEditor extends LinesModel {
 
     /** remove a line */
     void remove(long lineNo);
-
-    enum LinesModelChangeType {
-    	/** The line was inserted */
-    	INSERT,
-    	/** The line was changed. */
-    	CHANGE,
-    	/** The line was removed. */
-    	REMOVE
-    };
-
-    interface LinesModelChangedEvent {
-    	long getLineNo();
-    	LinesModelChangeType getChangeType();
-    }
 }

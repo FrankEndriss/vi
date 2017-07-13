@@ -19,12 +19,12 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class ViController implements KeyTypedController {
 	private Mode mode=Mode.VI_MODE;
-	private final LinesModelEditor linesModel;
+	private final LinesModel linesModel;
 	private final CursorModel cursorModel;
 	
 	private ModeStrategy inputModeStrategy=new ModeStrategy_VI_MODE();
 
-	public ViController(final LinesModelEditor linesModel, final CursorModel cursorModel) {
+	public ViController(final LinesModel linesModel, final CursorModel cursorModel) {
 		this.linesModel=linesModel;
 		this.cursorModel=cursorModel;
 	}

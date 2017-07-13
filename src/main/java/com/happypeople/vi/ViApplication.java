@@ -1,6 +1,8 @@
 package com.happypeople.vi;
 
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -13,6 +15,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import com.happypeople.vi.awt.AwtView;
 import com.happypeople.vi.awt.AwtViewFactory;
+import com.happypeople.vi.linesModel.ROFileLinesModelImpl;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -46,7 +49,7 @@ public class ViApplication {
 		return parser.parse(args);
 	}
 
-	public static void runTheApp(final ConfigurableApplicationContext context, final OptionSet cliArgs) {
+	public static void runTheApp(final ConfigurableApplicationContext context, final OptionSet cliArgs) throws IOException {
 
 		final AwtViewFactory awtViewFactory=context.getBean(AwtViewFactory.class);
 		final LinesModelFactory linesModelFactory=context.getBean(LinesModelFactory.class);
@@ -58,18 +61,23 @@ public class ViApplication {
 
 		// TODO parse args
 
-		final LinesModelEditor linesModel=linesModelFactory.createEmpty();
+		final LinesModel linesModel;
+		if(cliArgs.nonOptionArguments().isEmpty()) {
+			final LinesModelEditor linesModelE=linesModelFactory.createEmpty();
 
-		log.info("linesModel="+linesModel);
-
-		// remove for testing
-		linesModel.insertBefore(0, "firstLine");
-		linesModel.insertAfter(0, "secondLine");
-		linesModel.insertAfter(1, "thirdLine is longer...and next is an empty line");
-		linesModel.insertAfter(2, "");
-		linesModel.insertAfter(3, "last (fifth) line");
-		for(int i=4; i<100; i++)
-			linesModel.insertAfter(i, "another..."+i);
+			// remove for testing
+			linesModelE.insertBefore(0, "firstLine");
+			linesModelE.insertAfter(0, "secondLine");
+			linesModelE.insertAfter(1, "thirdLine is longer...and next is an empty line");
+			linesModelE.insertAfter(2, "");
+			linesModelE.insertAfter(3, "last (fifth) line");
+			for(int i=4; i<100; i++)
+				linesModelE.insertAfter(i, "another..."+i);
+			linesModel=linesModelE;
+		}else {
+			final Object arg=cliArgs.nonOptionArguments().get(0);
+			linesModel=new ROFileLinesModelImpl(new File(""+arg));
+		}
 
 //		final View view= awtViewFactory.createAwtView(screenModel, inputQueue);
 		final AwtView view= new AwtView(inputQueue);
