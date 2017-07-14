@@ -1,3 +1,28 @@
+----------------------------------------------------------------------------------------
+Feature: Cmd-Mode
+<strg>u
+	scroll half screen up
+<strg>d
+	scroll half screen down
+/<regex><ENTER>
+	springt bis regex match
+n / N
+	springt weiter zum nÃ¤chsten/vorherigen match
+	
+----------------------------------------------------------------------------------------
+Feature: Ex-parser/executor, implemented using JavaCC?
+:q 
+:wq
+	exit
+:<zahl>
+:+<zahl>
+:-<zahl>
+	springt cursor zur Zeile, ggf relativ
+:/<regex>
+	springt cursor zum nÃ¤chsten match/Zeile
+:ow/<regex>
+:ot/<regex>
+    Ã¶ffnet ein neues Window/Tab mit per regex gefiltertem linesModel
 
 ----------------------------------------------------------------------------------------
 Make AwtView render ScreenModel, not LineModel
@@ -14,6 +39,8 @@ Controller changes
 ----------------------------------------------------------------------------------------
 Order classes into packages
 ----------------------------------------------------------------------------------------
+Upd 2017-07-14: Inzwischen entschieden auf: https://pholser.github.io/jopt-simple/
+
 CLI, parsing of args
 
 Apache, declarative in java code:
@@ -25,24 +52,24 @@ http://args4j.kohsuke.org/
 https://www.javacodegeeks.com/2017/06/java-command-line-interfaces-part-2-args4j.html?_utm_source=1-2-2
 
 ----------------------------------------------------------------------------------------
-Umlaute: äöü ÄÖÜ ß
+Umlaute: ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½
+Java arbeitet mit char, gespeichert werden byte.
+Es ist je eine Konvertierung durchzufÃ¼hren, mithin muss das char-encoding
+"dynamisch" bestimmbar sein.
+MÃ¶glichst getrennt fÃ¼r Lesen und fÃ¼r Schreiben.
 ----------------------------------------------------------------------------------------
-Ã„nderungen in der GrÃ¶ÃŸe des GUI-Fensters sollen/mÃssen sich auf die grÃ¶Â´e des
-View-Bereiches auswirken.
-Dabei ist ggf auf die Ã„nderung der GrÃ¶ÃŸe des Buffer-Images zu be¼rcksichtigen.
-----------------------------------------------------------------------------------------
-Mehrzeilige Darstellung von Zeilen lÃnger als die Fensterbreite.
+Mehrzeilige Darstellung von Zeilen lï¿½nger als die Fensterbreite.
 Um das korrekt zu machen soll muss das Datenmodell "in mehreren Schichten" definiert
 werden:
 DataModel
   Letztlich sind dies die Zeilen im File/Buffer.
 ScreenRaster
-  Spalten x Zeilen Schachbrett, also die sichtbare, verfügbare "Zeichenfläche"
+  Spalten x Zeilen Schachbrett, also die sichtbare, verfï¿½gbare "Zeichenflï¿½che"
 ViewModel
-  Abbildung DataModel->ScreenRaster. Also für jede Zeile die Info wie viele
-  ScreenZeilen, letztlich die Übersetzung DataModel[x1][y1] -> ScreenRaster[x2][y2].
+  Abbildung DataModel->ScreenRaster. Also fï¿½r jede Zeile die Info wie viele
+  ScreenZeilen, letztlich die ï¿½bersetzung DataModel[x1][y1] -> ScreenRaster[x2][y2].
   Also die Info welche Zeile des DataModel wird in welcher Zeile des ScreenModel
-  dargestellt, und dasselbe für einzelne Chars und Spalten (Tabulatorproblem).
+  dargestellt, und dasselbe fï¿½r einzelne Chars und Spalten (Tabulatorproblem).
 CursorModel
   CursorPosition im ViewModel
 ----------------------------------------------------------------------------------------
@@ -56,6 +83,10 @@ work for this project.
 *************************************** DONE *******************************************
 ****************************************************************************************
 ----------------------------------------------------------------------------------------
+Ã„nderungen in der GrÃ¶ÃŸe des GUI-Fensters sollen/mï¿½ssen sich auf die grÃ¶Â´e des
+View-Bereiches auswirken.
+Dabei ist ggf auf die Ã„nderung der GrÃ¶ÃŸe des Buffer-Images zu beï¿½rcksichtigen.
+----------------------------------------------------------------------------------------
 done 2017-06-18
 Spring-Initialisierung
 pom.xml packaging fat jar with main class in manifest
@@ -68,24 +99,24 @@ als Beans defineren, und injecten.
 
 ...was nicht so einfach ist:
 Es gibt praktisch keine Singletons, sondern mehrere Scopes, zB den swing JFrame,
-eines der Models (es kÃnnen ja mehrere Files gleichzeitig "offen" sein), etc.
+eines der Models (es kï¿½nnen ja mehrere Files gleichzeitig "offen" sein), etc.
 
 Deshalb kann man nicht einfach alle Objekte als Beans definieren. Explizit Scopes 
-zu implementieren scheint auch eher aufwÃndig.
+zu implementieren scheint auch eher aufwï¿½ndig.
 Deshalb gehen wir nun wie folgt vor:
 Alle relevanten Klassen werden als "prototype" beans definiert.
-FÃr alle relevanten Interfaces gibt es je eine Factory-Klasse, diese ist ein singleton
-bean. Die implementierung dieser FactoryKlassen erzeugt die Objekte je Ãber Aufrufe
+Fï¿½r alle relevanten Interfaces gibt es je eine Factory-Klasse, diese ist ein singleton
+bean. Die implementierung dieser FactoryKlassen erzeugt die Objekte je ï¿½ber Aufrufe
 zu context.getBean("name", constructorArg, ...);
 
-Somit kann dann im Applikations-Code je wenn benÃtigt Ãber eine (oder mehrere) der
+Somit kann dann im Applikations-Code je wenn benï¿½tigt ï¿½ber eine (oder mehrere) der
 Factory-Objekte beliebig neue Objekte erzeugt werden.
 Gleichzeitig sind diese Objekte aber auch alle beans, so das beliebige Services
-etc injected werden kÃnnen.
+etc injected werden kï¿½nnen.
 ----------------------------------------------------------------------------------------
 done 2017-06-11 (
 Double buffering, Application Thread
-SÃmtlicher Keyboard-Input soll als KeyEvent in eine Input-Queue geschrieben werden.
+Sï¿½mtlicher Keyboard-Input soll als KeyEvent in eine Input-Queue geschrieben werden.
 Der ViController liesst dann in einem separaten Application-Thread aus eben dieser Queue,
 und erzeugt somit alle Model-Changes im Application-Thread.
 Der AwtView, also der Listener aller Model-Objekte, Rendert diese Model-Changes dann in

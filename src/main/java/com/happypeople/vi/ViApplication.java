@@ -44,7 +44,9 @@ public class ViApplication {
 	
 	private static OptionSet parseArgs(final String[] args) {
 		final OptionParser parser=new OptionParser();
-		parser.accepts("R"); // readonly
+		parser.acceptsAll(Arrays.asList("R", "readonly"), "readonly mode, no write to file possible"); // readonly
+		parser.accepts("w"); // one window per file/editor
+		parser.accepts("t"); // one window and one tab within that window per file/editor
 		
 		return parser.parse(args);
 	}
