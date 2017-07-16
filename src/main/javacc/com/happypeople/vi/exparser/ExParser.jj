@@ -1,0 +1,274 @@
+/**
+ * This parser parses the ex commands, that is what you enter after the ":" in vi mode
+ * See:
+ * http://www.unix.com/man-page/posix/1p/ex
+ * http://www.unix.com/man-page/posix/1p/vi
+**/
+
+options
+{
+	STATIC=false;
+	USER_TOKEN_MANAGER=false;
+	FORCE_LA_CHECK=true;
+	TOKEN_MANAGER_USES_PARSER=true;
+	DEBUG_PARSER=true;
+	DEBUG_TOKEN_MANAGER=true;
+	LOOKAHEAD=2;
+}
+PARSER_BEGIN(ExParser)
+
+package com.happypeople.vi.exparser;
+import java.util.*;
+
+public class ExParser
+{
+	final boolean DEBUG=false;
+}
+
+PARSER_END(ExParser)
+
+TOKEN_MGR_DECLS:
+{
+	final boolean DEBUG=false;
+}
+	
+/** DEFAULT state at start */
+TOKEN:
+{
+	< SEMICOLON	: ";" >
+|	< COLON		: "," >
+|	< EXCLAMATION : "!" >
+|	< DOT		: "." >
+|	< DOLLAR	: "?" >
+		// ab[breviate][lhs rhs]
+|	< ABREVIATION_CMD	: "ab" ("b"("r"("e"("v"("i"("a"("t"("e")?)?)?)?)?)?)?)? >: LHS_RHS
+		// ar[gs]
+|	< ARGS_CMD	: "ar" ("g"("s")?)? >
+        // chd[ir][!][directory]
+        // cd[!][directory]
+|	< CD_CMD	: ( "cd" | "chd" ("i"("r")?)? ) (<EXCLAMATION>)? >: FILENAME
+		// [2addr] d[elete][buffer][count][flags]
+//|	< DEL_CMD	: "d" ("e"("l"("e"("t"("e")?)?)?)?)? >
+
+|	< PLUS		: "+" >
+|	< MINUS		: "-" >
+|	< SLASH		: "/" >: IN_REGEX				/* start and end of regex			*/
+|	< BACKSLASH	: "\\" >						/* escapes SLASH					*/
+|	< NEWLINE	: "\n" >						/* ends input						*/
+}
+
+<*> TOKEN:
+{
+	<WS					: ([ " ", "\t" ])+ >
+}
+
+// State for parsing "command lhs rhs"
+<LHS_RHS> TOKEN:
+{
+	<ANYTHING_BUT_WS	: (~[ " ", "\t", ";" ])+ >
+	// Note that the parser would have to switch back to default
+	// state after rhs.
+	// What about SEMICOLON?
+}
+
+// State for parsing a file- or directory name
+<FILENAME> TOKEN:
+{
+	// what about double quoted strings?
+	<ANYTHING_IN_FILENAME	: (~[ ";", "\n", " " ])+ >: DEFAULT
+}
+
+<IN_REGEX> TOKEN:
+{
+	< ANYTHING_BUT_SLASH 	: ~[ "/", "\n" ] >				/* anything until a SLASH			*/
+|	< SLASH_IN_REGEX		: "/" >: DEFAULT							/* start and end of regex			*/
+// TODO consider escaped SLASH
+// TODO the real rule says the regex-delimiters can be nearly any char, so this analyser state
+// is a temporary solution.
+// The real solution cant be expressed by these lexer-rules, and hence must be implemeted "by hand".
+}
+
+<IN_FILENAME> TOKEN:
+{
+	< ANYTHING_BUT_NEWLINE 	: ~[ "\n" ]	>		/* anything until newline, used for filename		*/
+}
+
+/** This parses an ex command line
+*/
+void exCommandLine():
+{
+}
+{
+	exCommands() ( <NEWLINE> | <EOF> )
+}
+
+void exCommands():
+{
+}
+{
+	(<WS>|<SEMICOLON>)* exCommand() ( <SEMICOLON> exCommands() )?
+//	exCommand() (<WS>)? ( <SEMICOLON> exCommands() )?
+}
+
+void exCommand():
+{
+}
+{
+	abbreviation_cmd()
+|	args_cmd()
+|	cd_cmd()
+|	address_list() addressed_cmd()
+}
+
+// commands with address prefixes, like "1,$s/foo/bar"
+void addressed_cmd():
+{
+}
+{
+	delete_cmd()
+}
+
+// [2addr] d[elete][buffer][count][flags]
+void delete_cmd():
+{
+BufferRef bufferRef=BufferRef.DEFAULT_BUFFER;
+}
+{
+	address_list() DEL_CMD() (bufferRef=buffername())? (NUMBER())? 			// (<FLAGS>)?
+}
+
+void DEL_CMD():
+{
+}
+{
+	"d"("e"("l"("e"("t"("e")?)?)?)?)?
+}
+
+
+// < NUMBER	: "0" | ["1"-"9"](["0"-"9"])* >
+String NUMBER():
+{
+StringBuilder sb=new StringBuilder();
+Token t;
+}
+{
+	(
+	t="0" { sb.append(t.image.charAt(0)); } |
+		((t="1"|t="2"|t="3"|t="4"|t="5"|t="6"|t="7"|t="8"|t="9") { sb.append(t.image.charAt(0)); } 
+		((t="0"|t="1"|t="2"|t="3"|t="4"|t="5"|t="6"|t="7"|t="8"|t="9") { sb.append(t.image.charAt(0)); })* )
+	)
+	{ return sb.toString(); }
+}
+
+BufferRef buffername():
+{
+Token t;
+}
+{
+	// doublequote followed by a single alphanumeric
+	// by specifing it as a parser rule we do not have
+	// to define an _unnice_ token BUFFER or BUFFERNAME
+	"\"" (
+		t="a" |t="b" |t="c" |t="d" |t="e" |t="f" |t="g" |t="h" |t="i" |t="j" |
+		t="k" |t="l" |t="m" |t="n" |t="o" |t="p" |t="q" |t="r" |t="s" |t="t" |
+		t="u" |t="v" |t="w" |t="x" |t="y" |t="z" |t="A" |t="B" |t="C" |t="D" |
+		t="E" |t="F" |t="G" |t="H" |t="I" |t="J" |t="K" |t="L" |t="M" |t="N" |
+		t="O" |t="P" |t="Q" |t="R" |t="S" |t="T" |t="U" |t="V" |t="W" |t="X" |
+		t="Y" |t="Z" |t="0" |t="1" |t="2" |t="3" |t="4" |t="5" |t="6" |t="7" |
+		t="8" |t="9")
+	{ return new BufferRef(t.image.charAt(0)); }
+}
+
+// addresses prefix
+void address_list():
+{
+}
+{
+	address() ( <COLON> address_list() )?
+}
+
+void address():
+{
+}
+{
+	(simple_address())? ( address_offset_list() )?
+}
+
+void address_offset_list():
+{
+}
+{
+	address_offset() ( address_offset_list() )?
+}
+
+void address_offset():
+{
+}
+{
+	( <PLUS> | <MINUS> ) ( NUMBER() )?
+}
+
+void simple_address():
+{
+}
+{
+	<DOT>		// current line
+|	<DOLLAR>	// last line
+|	NUMBER()	// that line
+}
+
+// ar[gs]
+void args_cmd():
+{
+}
+{
+	<ARGS_CMD> 
+}
+
+// chd[ir][!][directory]
+// cd[!][directory]
+void cd_cmd():
+{
+}
+{
+	// Note that the optional "!" is part of <CD_CMD>
+	<CD_CMD> (<WS>)? <ANYTHING_IN_FILENAME>
+}
+
+
+// ab[breviate][lhs rhs]
+void abbreviation_cmd():
+{
+Token lhs;
+Token rhs;
+}
+{
+	<ABREVIATION_CMD> ( (<WS>)? lhs=<ANYTHING_BUT_WS> <WS> rhs=<ANYTHING_BUT_WS> )?
+}
+
+/** @return the between the slashes, ie the regex as a String */
+String regex():
+{
+Token t;
+}
+{
+	<SLASH> t=<ANYTHING_BUT_SLASH>  <SLASH_IN_REGEX> 
+	{
+		return t.image;
+	}
+}
+
+void action():
+{
+}
+{
+	"w" (<EXCLAMATION>)? filename()
+}
+
+void filename():
+{
+}
+{
+	<ANYTHING_BUT_NEWLINE>
+}
+
