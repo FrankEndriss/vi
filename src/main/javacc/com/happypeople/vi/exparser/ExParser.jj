@@ -43,7 +43,7 @@ TOKEN:
 		// ab[breviate][lhs rhs]
 |	< ABREVIATION_CMD	: "ab" ("b"("r"("e"("v"("i"("a"("t"("e")?)?)?)?)?)?)?)? >: LHS_RHS
 		// ar[gs]
-|	< ARGS_CMD	: "ar" ("g"("s")?)? >
+//|	< ARGS_CMD	: "ar" ("g"("s")?)? >
         // chd[ir][!][directory]
         // cd[!][directory]
 |	< CD_CMD	: ( "cd" | "chd" ("i"("r")?)? ) (<EXCLAMATION>)? >: FILENAME
@@ -95,46 +95,59 @@ TOKEN:
 
 /** This parses an ex command line
 */
-void exCommandLine():
+List<ExCommand> exCommandLine():
 {
+List<ExCommand> ret;
 }
 {
-	exCommands() ( <NEWLINE> | <EOF> )
-}
-
-void exCommands():
-{
-}
-{
-	(<WS>|<SEMICOLON>)* exCommand() ( <SEMICOLON> exCommands() )?
-//	exCommand() (<WS>)? ( <SEMICOLON> exCommands() )?
+	ret=exCommands() ( <NEWLINE> | <EOF> )
+	{ return ret; }
 }
 
-void exCommand():
+List<ExCommand> exCommands():
 {
+List<ExCommand> ret=new ArrayList<ExCommand>();
+List<ExCommand> tmpList;
+ExCommand tmpCmd;
 }
 {
+	(<WS>|<SEMICOLON>)* tmpCmd=exCommand() { ret.add(tmpCmd); } ( <SEMICOLON> tmpList=exCommands() { ret.addAll(tmpList); } )?
+	{ return ret; }
+}
+
+ExCommand exCommand():
+{
+ExCommand ret=null;
+List<ExAddress> addressList;
+}
+{
+	(
 	abbreviation_cmd()
-|	args_cmd()
+|	ret=args_cmd()
 |	cd_cmd()
-|	address_list() addressed_cmd()
+|	addressList=address_list() ret=addressed_cmd(addressList)
+	)	{ return ret; }
 }
 
 // commands with address prefixes, like "1,$s/foo/bar"
-void addressed_cmd():
+ExCommand addressed_cmd(final List<ExAddress> addressList):
 {
+ExCommand ret;
 }
 {
-	delete_cmd()
+	ret=delete_cmd(addressList)
+	{ return ret; }
 }
 
 // [2addr] d[elete][buffer][count][flags]
-void delete_cmd():
+DeleteCmd delete_cmd(List<ExAddress> addressList):
 {
 BufferRef bufferRef=BufferRef.DEFAULT_BUFFER;
+String number="";
 }
 {
-	address_list() DEL_CMD() (bufferRef=buffername())? (NUMBER())? 			// (<FLAGS>)?
+	DEL_CMD() (bufferRef=buffername())? (number=NUMBER())? 			// (<FLAGS>)?
+	{ return new DeleteCmd(addressList, bufferRef, number); }
 }
 
 void DEL_CMD():
@@ -180,18 +193,25 @@ Token t;
 }
 
 // addresses prefix
-void address_list():
+List<ExAddress> address_list():
 {
+List<ExAddress> ret=new ArrayList<ExAddress>();
+List<ExAddress> tmpList=new ArrayList<ExAddress>();
+ExAddress tmpAddress;
 }
 {
-	address() ( <COLON> address_list() )?
+	tmpAddress=address() { ret.add(tmpAddress); }  ( <COLON> tmpList=address_list()  { ret.addAll(tmpList); } )?
+	{ return ret; }
 }
 
-void address():
+ExAddress address():
 {
+// TODO
+ExAddress adr=null;
 }
 {
 	(simple_address())? ( address_offset_list() )?
+	{ return adr; }
 }
 
 void address_offset_list():
@@ -218,11 +238,12 @@ void simple_address():
 }
 
 // ar[gs]
-void args_cmd():
+ArgsCmd args_cmd():
 {
 }
 {
-	<ARGS_CMD> 
+	"ar" ("g"("s")?)?
+	{ return new ArgsCmd(); }
 }
 
 // chd[ir][!][directory]

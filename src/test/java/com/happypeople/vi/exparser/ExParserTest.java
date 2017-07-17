@@ -4,14 +4,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.StringReader;
+import java.util.List;
 
 import org.junit.Test;
 
 public class ExParserTest {
 
-	private void testExCommandLine(final String cmd) throws ParseException {
+	private List<ExCommand> testExCommandLine(final String cmd) throws ParseException {
 		final ExParser parser=new ExParser(new StringReader(cmd));
-		parser.exCommandLine();
+		return parser.exCommandLine();
+	}
+
+	private ExCommand testExCommand(final String cmd) throws ParseException {
+		final ExParser parser=new ExParser(new StringReader(cmd));
+		return parser.exCommand();
 	}
 
 	@Test
