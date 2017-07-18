@@ -37,18 +37,14 @@ TOKEN:
 {
 	< SEMICOLON	: ";" >
 |	< COLON		: "," >
-|	< EXCLAMATION : "!" >
 |	< DOT		: "." >
 |	< DOLLAR	: "?" >
 		// ab[breviate][lhs rhs]
 |	< ABREVIATION_CMD	: "ab" ("b"("r"("e"("v"("i"("a"("t"("e")?)?)?)?)?)?)?)? >: LHS_RHS
 		// ar[gs]
-//|	< ARGS_CMD	: "ar" ("g"("s")?)? >
         // chd[ir][!][directory]
         // cd[!][directory]
-|	< CD_CMD	: ( "cd" | "chd" ("i"("r")?)? ) (<EXCLAMATION>)? >: FILENAME
 		// [2addr] d[elete][buffer][count][flags]
-//|	< DEL_CMD	: "d" ("e"("l"("e"("t"("e")?)?)?)?)? >
 
 |	< PLUS		: "+" >
 |	< MINUS		: "-" >
@@ -71,13 +67,6 @@ TOKEN:
 	// What about SEMICOLON?
 }
 
-// State for parsing a file- or directory name
-<FILENAME> TOKEN:
-{
-	// what about double quoted strings?
-	<ANYTHING_IN_FILENAME	: (~[ ";", "\n", " " ])+ >: DEFAULT
-}
-
 <IN_REGEX> TOKEN:
 {
 	< ANYTHING_BUT_SLASH 	: ~[ "/", "\n" ] >				/* anything until a SLASH			*/
@@ -86,11 +75,6 @@ TOKEN:
 // TODO the real rule says the regex-delimiters can be nearly any char, so this analyser state
 // is a temporary solution.
 // The real solution cant be expressed by these lexer-rules, and hence must be implemeted "by hand".
-}
-
-<IN_FILENAME> TOKEN:
-{
-	< ANYTHING_BUT_NEWLINE 	: ~[ "\n" ]	>		/* anything until newline, used for filename		*/
 }
 
 /** This parses an ex command line
@@ -124,7 +108,7 @@ List<ExAddress> addressList;
 	(
 	abbreviation_cmd()
 |	ret=args_cmd()
-|	cd_cmd()
+|	ret=cd_cmd()
 |	addressList=address_list() ret=addressed_cmd(addressList)
 	)	{ return ret; }
 }
@@ -248,14 +232,22 @@ ArgsCmd args_cmd():
 
 // chd[ir][!][directory]
 // cd[!][directory]
-void cd_cmd():
+CdCmd cd_cmd():
 {
+String fileName;
+boolean withExclamation=false;
 }
 {
-	// Note that the optional "!" is part of <CD_CMD>
-	<CD_CMD> (<WS>)? <ANYTHING_IN_FILENAME>
+	CD_CMD() ("!" { withExclamation=true; } )? (<WS>)? fileName=filename()
+	{ return new CdCmd(withExclamation, fileName); }
 }
 
+public void CD_CMD():
+{
+}
+{
+	( "cd" | "chd" ("i"("r")?)? ) 
+}
 
 // ab[breviate][lhs rhs]
 void abbreviation_cmd():
@@ -283,13 +275,70 @@ void action():
 {
 }
 {
-	"w" (<EXCLAMATION>)? filename()
+	"w" ("!")? filename()
 }
 
-void filename():
+String filename():
 {
+Token t;
+StringBuilder sb=new StringBuilder();
 }
 {
-	<ANYTHING_BUT_NEWLINE>
+// TODO check or find a way to deal with doublequote strings
+	( (t=alphanum()|t="_"|t="$"|t="/" ) { sb.append(t.image); } )+
+	{ return sb.toString(); }
 }
 
+
+Token alphanum():
+{
+Token t;
+}
+{
+	(t=num() | t=letter())
+	{ return t; }
+}
+
+Token num():
+{
+Token t=null;
+}
+{
+	(t="0" | t=pos_num())
+	{ return t; }
+}
+
+Token pos_num():
+{
+Token t;
+}
+{
+	(t="1"|t="2"|t="3"|t="4"|t="5"|t="6"|t="7"|t="8"|t="9")
+	{ return t; }
+}
+Token letter():
+{
+Token t=null;
+}
+{
+	(t=uppercase_letter() | t=lowercase_letter())
+	{ return t; }
+}
+
+Token uppercase_letter():
+{
+Token t;
+}
+{
+	(t="A"|t="B"|t="C"|t="D"|t="E"|t="F"|t="G"|t="H"|t="I"|t="J"|t="K"|t="L"|t="M"|t="N"|t="O"|t="P"|t="Q"|t="R"|t="S"|t="T"|t="U"|t="V"|t="W"|t="X"|t="Y"|t="Z")
+	{ return t; }
+}
+
+Token lowercase_letter():
+{
+Token t;
+}
+{
+	(t="a"|t="b"|t="c"|t="d"|t="e"|t="f"|t="g"|t="h"|t="i"|t="j"|t="k"|t="l"|t="m"|t="n"|t="o"|t="p"|t="q"|t="r"|t="s"|t="t"|t="u"|t="v"|t="w"|t="x"|t="y"|t="z")
+	{ return t; }
+}

@@ -1,9 +1,9 @@
 package com.happypeople.vi.exparser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -65,16 +65,18 @@ public class ExParserTest {
 
 	@Test
 	public void testArgsCmd() throws ParseException {
-		testExCommandLine("ar");
-		testExCommandLine("arg");
-		testExCommandLine("args");
+		for(final String s : Arrays.asList("ar", "arg", "args")) {
+			final ExCommand cmd=testExCommand(s);
+			assertNotNull("must not be null", cmd);
+			assertTrue("must be ArgsCmd", cmd instanceof ArgsCmd);
+		}
 	}
 
 	@Test
 	public void testCdCmd() throws ParseException {
-		testExCommandLine("cd bla");
-		testExCommandLine("chdir /foo");
-		testExCommandLine("chd! /foo/bar");
-		testExCommandLine("cd! mydir");
+		for(final String s : Arrays.asList("cd bla", "chdir /foo", "chd! /foo/bar", "cd! mydir")) {
+			System.out.println("checking: "+s);
+			ExCommand exCommand=testExCommand(s);
+		}
 	}
 }
