@@ -11,8 +11,8 @@ options
 	USER_TOKEN_MANAGER=false;
 	FORCE_LA_CHECK=true;
 	TOKEN_MANAGER_USES_PARSER=true;
-	DEBUG_PARSER=true;
-	DEBUG_TOKEN_MANAGER=true;
+	DEBUG_PARSER=false;
+	DEBUG_TOKEN_MANAGER=false;
 	LOOKAHEAD=2;
 }
 PARSER_BEGIN(ExParser)
@@ -138,12 +138,15 @@ StringBuilder sb=new StringBuilder();
 Token t;
 }
 {
-	(
-	t="0" { sb.append(t.image.charAt(0)); } |
-		((t="1"|t="2"|t="3"|t="4"|t="5"|t="6"|t="7"|t="8"|t="9") { sb.append(t.image.charAt(0)); } 
-		((t="0"|t="1"|t="2"|t="3"|t="4"|t="5"|t="6"|t="7"|t="8"|t="9") { sb.append(t.image.charAt(0)); })* )
-	)
-	{ return sb.toString(); }
+	( "0" { sb.append("0"); } | t=pos_num() { sb.append(t.image); } ( t=num() { sb.append(t.image); } )*
+	) { return sb.toString(); }
+
+//	(
+//	t="0" { sb.append(t.image.charAt(0)); } |
+//		((t="1"|t="2"|t="3"|t="4"|t="5"|t="6"|t="7"|t="8"|t="9") { sb.append(t.image.charAt(0)); } 
+//		((t="0"|t="1"|t="2"|t="3"|t="4"|t="5"|t="6"|t="7"|t="8"|t="9") { sb.append(t.image.charAt(0)); })* )
+//	)
+//	{ return sb.toString(); }
 }
 
 BufferRef buffername():
@@ -227,7 +230,8 @@ String fileName;
 boolean withExclamation=false;
 }
 {
-	CD_CMD() ("!" { withExclamation=true; } )? (<WS>)? fileName=filename()
+// Note: the WS might be optional, but causes a choice conflict
+	CD_CMD() ("!" { withExclamation=true; } )? <WS> fileName=filename()
 	{ return new CdCmd(withExclamation, fileName); }
 }
 
@@ -245,7 +249,8 @@ Token lhs;
 Token rhs;
 }
 {
-	<ABREVIATION_CMD> ( (<WS>)? lhs=<ANYTHING_BUT_WS> <WS> rhs=<ANYTHING_BUT_WS> )?
+// Note: the first WS might be optional, but that would cause a choice conflict
+	<ABREVIATION_CMD> ( <WS> lhs=<ANYTHING_BUT_WS> <WS> rhs=<ANYTHING_BUT_WS> )?
 }
 
 /** @return the between the slashes, ie the regex as a String */
