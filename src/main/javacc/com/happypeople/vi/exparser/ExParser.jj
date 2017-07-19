@@ -36,18 +36,7 @@ TOKEN_MGR_DECLS:
 TOKEN:
 {
 	< SEMICOLON	: ";" >
-|	< COLON		: "," >
-|	< DOT		: "." >
-|	< DOLLAR	: "?" >
-		// ab[breviate][lhs rhs]
 |	< ABREVIATION_CMD	: "ab" ("b"("r"("e"("v"("i"("a"("t"("e")?)?)?)?)?)?)?)? >: LHS_RHS
-		// ar[gs]
-        // chd[ir][!][directory]
-        // cd[!][directory]
-		// [2addr] d[elete][buffer][count][flags]
-
-|	< PLUS		: "+" >
-|	< MINUS		: "-" >
 |	< SLASH		: "/" >: IN_REGEX				/* start and end of regex			*/
 |	< BACKSLASH	: "\\" >						/* escapes SLASH					*/
 |	< NEWLINE	: "\n" >						/* ends input						*/
@@ -184,7 +173,7 @@ List<ExAddress> tmpList=new ArrayList<ExAddress>();
 ExAddress tmpAddress;
 }
 {
-	tmpAddress=address() { ret.add(tmpAddress); }  ( <COLON> tmpList=address_list()  { ret.addAll(tmpList); } )?
+	tmpAddress=address() { ret.add(tmpAddress); }  ( "," tmpList=address_list()  { ret.addAll(tmpList); } )?
 	{ return ret; }
 }
 
@@ -209,15 +198,15 @@ void address_offset():
 {
 }
 {
-	( <PLUS> | <MINUS> ) ( NUMBER() )?
+	( "+" | "-" ) ( NUMBER() )?
 }
 
 void simple_address():
 {
 }
 {
-	<DOT>		// current line
-|	<DOLLAR>	// last line
+	"."			// current line
+|	"$"			// last line
 |	NUMBER()	// that line
 }
 
@@ -285,7 +274,7 @@ StringBuilder sb=new StringBuilder();
 }
 {
 // TODO check or find a way to deal with doublequote strings
-	( (t=alphanum()|t="_"|t="$"|t="/" ) { sb.append(t.image); } )+
+	( (t=alphanum()|t="_"|t="$"|t="/"|t="."|t=":" ) { sb.append(t.image); } )+
 	{ return sb.toString(); }
 }
 

@@ -77,6 +77,7 @@ public class ExParserTest {
 		for(final String s : Arrays.asList("cd bla", "chdir /foo", "chd! /foo/bar", "cd! mydir")) {
 			System.out.println("checking: "+s);
 			ExCommand exCommand=testExCommand(s);
+			assertTrue(exCommand instanceof CdCmd);
 		}
 	}
 }
