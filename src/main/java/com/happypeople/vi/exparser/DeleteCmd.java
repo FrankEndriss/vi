@@ -8,9 +8,9 @@ public class DeleteCmd extends AbstractExCommand {
 
 	private List<ExAddress> addresses;
 	private BufferRef bufferRef;
-	private String extraAddress;
+	private long extraAddress;
 
-	public DeleteCmd(List<ExAddress> addressList, BufferRef bufferRef, String extraAddress) {
+	public DeleteCmd(List<ExAddress> addressList, BufferRef bufferRef, long extraAddress) {
 		this.addresses=addressList;
 		this.bufferRef=bufferRef;
 		this.extraAddress=extraAddress;
@@ -18,7 +18,7 @@ public class DeleteCmd extends AbstractExCommand {
 
 	@Override
 	public void execute(EditContext editContext) {
-
+		throw new RuntimeException("not implemented yet");
 	}
 
 }

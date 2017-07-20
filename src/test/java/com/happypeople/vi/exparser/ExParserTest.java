@@ -28,11 +28,11 @@ public class ExParserTest {
 			"1",
 			"9",
 			"17",
-			"12314225654656235363265636"
+			""+Long.MAX_VALUE
 		};
 		for(final String s : numberstrings) {
 			final ExParser parser=new ExParser(new StringReader(s));
-			assertEquals("should return the same number string", s, parser.NUMBER());
+			assertEquals("should return the same number string", s, ""+parser.NUMBER());
 		}
 	}
 
@@ -60,7 +60,10 @@ public class ExParserTest {
 
 	@Test
 	public void testAbbrevCmd() throws ParseException {
-		testExCommandLine("abbrev foo bar");
+		final ExCommand exCmd=testExCommand("abbrev foo bar");
+		assertTrue("should be AbreviationCmd", exCmd instanceof AbbreviationCmd);
+		assertTrue("should be AbreviationCmd", testExCommand("abbrev foo bar with ws") instanceof AbbreviationCmd);
+		assertTrue("should be AbreviationCmd", testExCommand("abbrev foo bar with ws and \\\nnewline") instanceof AbbreviationCmd);
 	}
 
 	@Test

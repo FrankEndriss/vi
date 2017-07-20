@@ -11,8 +11,8 @@ options
 	USER_TOKEN_MANAGER=false;
 	FORCE_LA_CHECK=true;
 	TOKEN_MANAGER_USES_PARSER=true;
-	DEBUG_PARSER=false;
-	DEBUG_TOKEN_MANAGER=false;
+	DEBUG_PARSER=true;
+	DEBUG_TOKEN_MANAGER=true;
 	LOOKAHEAD=2;
 }
 PARSER_BEGIN(ExParser)
@@ -23,22 +23,68 @@ import java.util.*;
 public class ExParser
 {
 	final boolean DEBUG=false;
+	
+// http://www.engr.mun.ca/~theo/JavaCC-FAQ/SetState.txt
+// JavaCC hack for doing lexical state transitions syntactically
+private void SetState(int state) {
+  if (state != token_source.curLexState) {
+    Token root = new Token(), last=root;
+    root.next = null;
+
+    // First, we build a list of tokens to push back, in backwards order
+    while (token.next != null) {
+      Token t = token;
+      // Find the token whose token.next is the last in the chain
+      while (t.next != null && t.next.next != null)
+        t = t.next;
+
+      // put it at the end of the new chain
+      last.next = t.next;
+      last = t.next;
+
+      // If there are special tokens, these go before the regular tokens,
+      // so we want to push them back onto the input stream in the order
+      // we find them along the specialToken chain.
+
+      if (t.next.specialToken != null) {
+        Token tt=t.next.specialToken;
+        while (tt != null) {
+          last.next = tt;
+          last = tt;
+          tt.next = null;
+          tt = tt.specialToken;
+        }
+      }
+      t.next = null;
+    };
+
+    while (root.next != null) {
+      token_source.backup(root.next.image.length());
+      root.next = root.next.next;
+    }
+    jj_ntk = -1;
+    token_source.SwitchTo(state);
+  }
+}
+	
 }
 
 PARSER_END(ExParser)
 
 TOKEN_MGR_DECLS:
 {
-	final boolean DEBUG=false;
+	///final boolean DEBUG=false;
+
+	// Required by SetState
+	void backup(final int n) {
+		input_stream.backup(n);
+	}
 }
 	
 /** DEFAULT state at start */
 TOKEN:
 {
 	< SEMICOLON	: ";" >
-|	< ABREVIATION_CMD	: "ab" ("b"("r"("e"("v"("i"("a"("t"("e")?)?)?)?)?)?)?)? >: LHS_RHS
-|	< SLASH		: "/" >: IN_REGEX				/* start and end of regex			*/
-|	< BACKSLASH	: "\\" >						/* escapes SLASH					*/
 |	< NEWLINE	: "\n" >						/* ends input						*/
 }
 
@@ -47,23 +93,31 @@ TOKEN:
 	<WS					: ([ " ", "\t" ])+ >
 }
 
-// State for parsing "command lhs rhs"
-<LHS_RHS> TOKEN:
+// States for parsing the arguments to the Abbreviation command
+<ABBREV_LHS_STATE> TOKEN:
 {
-	<ANYTHING_BUT_WS	: (~[ " ", "\t", ";" ])+ >
-	// Note that the parser would have to switch back to default
-	// state after rhs.
-	// What about SEMICOLON?
+// Anything but WS
+// TODO What about escaped WS?
+	< LHS	: (~[" ", "\t", "\r", "\n"])+ >
 }
 
-<IN_REGEX> TOKEN:
+<ABBREV_RHS_STATE> TOKEN:
 {
-	< ANYTHING_BUT_SLASH 	: ~[ "/", "\n" ] >				/* anything until a SLASH			*/
-|	< SLASH_IN_REGEX		: "/" >: DEFAULT							/* start and end of regex			*/
-// TODO consider escaped SLASH
-// TODO the real rule says the regex-delimiters can be nearly any char, so this analyser state
-// is a temporary solution.
-// The real solution cant be expressed by these lexer-rules, and hence must be implemeted "by hand".
+// Anything up to NL
+// RHS must not be empty and can contain anything (including escaped NL) up to a NL
+// iE any excaped char or anything but backslash or nl
+	< RHS	: ("\\" ~[] | ~["\\", "\n"])+ >
+}
+
+// States for parsing regular expressions
+// Note: can a regex be emtpy?
+<SLASH_REGEX_STATE> TOKEN:
+{
+	<ANYTHING_BUT_SLASH: (~["/"])+ >
+}
+<QUESTION_REGEX_STATE> TOKEN:
+{
+	<ANYTHING_BUT_QUESTION: (~["?"])+ >
 }
 
 /** This parses an ex command line
@@ -95,7 +149,7 @@ List<ExAddress> addressList;
 }
 {
 	(
-	abbreviation_cmd()
+	ret=abbreviation_cmd()
 |	ret=args_cmd()
 |	ret=cd_cmd()
 |	addressList=address_list() ret=addressed_cmd(addressList)
@@ -116,7 +170,7 @@ ExCommand ret;
 DeleteCmd delete_cmd(List<ExAddress> addressList):
 {
 BufferRef bufferRef=BufferRef.DEFAULT_BUFFER;
-String number="";
+long number=0;
 }
 {
 	DEL_CMD() (bufferRef=buffername())? (number=NUMBER())? 			// (<FLAGS>)?
@@ -130,16 +184,30 @@ void DEL_CMD():
 	"d"("e"("l"("e"("t"("e")?)?)?)?)?
 }
 
+//   Copy
+//       Synopsis:
+//		     [2addr] co[py] 1addr [flags]
+//		     [2addr] t 1addr [flags]
+CopyCmd copy_cmd():
+{
+List<ExAddress> adrList;
+ExAddress adrTarget;
+}
+{
+	( adrList=address_list() ( "t" | "co" ("p"("y")?)? ) adrTarget=address() 	// flags 
+	) { return new CopyCmd(adrList, adrTarget); }
+
+}
 
 // < NUMBER	: "0" | ["1"-"9"](["0"-"9"])* >
-String NUMBER():
+long NUMBER():
 {
 StringBuilder sb=new StringBuilder();
 Token t;
 }
 {
 	( "0" { sb.append("0"); } | t=pos_num() { sb.append(t.image); } ( t=num() { sb.append(t.image); } )*
-	) { return sb.toString(); }
+	) { return Long.parseLong(sb.toString()); }
 
 //	(
 //	t="0" { sb.append(t.image.charAt(0)); } |
@@ -180,37 +248,49 @@ ExAddress tmpAddress;
 	{ return ret; }
 }
 
+// Note: address can be emtpy, in which case it is the current line, iE the <DOT>-Address "."
 ExAddress address():
 {
-// TODO
-ExAddress adr=null;
+SimpleAddress simpleAddress=ExAddress.DOT;
+long offset=0;
 }
 {
-	(simple_address())? ( address_offset_list() )?
-	{ return adr; }
-}
-
-void address_offset_list():
-{
-}
-{
-	address_offset() ( address_offset_list() )?
+	(simpleAddress=simple_address())? ( offset=address_offset_list() )?
+	{ return new ExAddress(simpleAddress, offset); }
 }
 
-void address_offset():
+long address_offset_list():
 {
+long offset1=0;
+long offset2=0;
 }
 {
-	( "+" | "-" ) ( NUMBER() )?
+	( offset1=address_offset() ( offset2=address_offset_list() )? )
+	{ return offset1+offset2; }
 }
 
-void simple_address():
+long address_offset():
 {
+int mul=0;
+long num=1;
 }
 {
-	"."			// current line
-|	"$"			// last line
-|	NUMBER()	// that line
+	( ( "+" { mul=1; } | "-" { mul=-1; } ) ( num=NUMBER() )? )
+	{ return num*mul; }
+}
+
+SimpleAddress simple_address():
+{
+SimpleAddress ret=null;
+long num=0;
+}
+{
+(
+	"."			{ ret=new DotAddress(); }		// current line
+|	"$"			{ ret=new DollarAddress(); }	// last line
+|	num=NUMBER() { ret=new AbsoluteAddress(num); }	// that line
+|	ret=regex()									// next/prev line matching
+) { return ret; }
 }
 
 // ar[gs]
@@ -242,26 +322,57 @@ public void CD_CMD():
 	( "cd" | "chd" ("i"("r")?)? ) 
 }
 
+
 // ab[breviate][lhs rhs]
-void abbreviation_cmd():
+AbbreviationCmd abbreviation_cmd():
 {
-Token lhs;
-Token rhs;
+Token lhs=null;
+Token rhs=null;
 }
 {
 // Note: the first WS might be optional, but that would cause a choice conflict
-	<ABREVIATION_CMD> ( <WS> lhs=<ANYTHING_BUT_WS> <WS> rhs=<ANYTHING_BUT_WS> )?
+	ABBREVIATION_CMD() { SetState(ABBREV_LHS_STATE); } ( <WS> lhs=<LHS> <WS> { SetState(ABBREV_RHS_STATE); } rhs=<RHS> )?
+	{	return new AbbreviationCmd(lhs!=null?lhs.image:null, rhs!=null?rhs.image:null); }
 }
 
-/** @return the between the slashes, ie the regex as a String */
-String regex():
+// una[bbrev] lhs
+UnabbreviationCmd unabbreviation_cmd():
 {
-Token t;
+Token lhs=null;
 }
 {
-	<SLASH> t=<ANYTHING_BUT_SLASH>  <SLASH_IN_REGEX> 
-	{
-		return t.image;
+	UNABBREVIATION_CMD() <WS> { SetState(ABBREV_LHS_STATE); } lhs=<LHS> 
+	{	return new UnabbreviationCmd(lhs.image); }
+}
+
+
+void UNABBREVIATION_CMD():
+{
+}
+{
+	"una" ("b"("b"("r"("e"("v"("i"("a"("t"("e")?)?)?)?)?)?)?)?)?
+}
+
+void ABBREVIATION_CMD():
+{
+}
+{
+	"ab" ("b"("r"("e"("v"("i"("a"("t"("e")?)?)?)?)?)?)?)?
+}
+
+/** @return the between the slashes, ie the regex as a String
+ */
+RegexAddress regex():
+{
+Token t;
+RegexAddress.Dir direction=null;
+}
+{
+	( "/" { direction=RegexAddress.Dir.FORWARD; SetState(SLASH_REGEX_STATE); 	}	t=<ANYTHING_BUT_SLASH> 		"/"
+|	"?" { direction=RegexAddress.Dir.BACKWARD; SetState(QUESTION_REGEX_STATE);	}	t=<ANYTHING_BUT_QUESTION>	"?"
+	)
+	{	SetState(DEFAULT); 
+		return new RegexAddress(direction, t.image);
 	}
 }
 
@@ -283,6 +394,35 @@ StringBuilder sb=new StringBuilder();
 	{ return sb.toString(); }
 }
 
+
+/** @return a token up to the next WS or NL
+Token ANYTHING_BUT_WS_AND_NL():
+{
+Token t;
+}
+{
+	{	System.out.println("SetState(ANYTHING_BUT_WS_AND_NL_STATE)");
+		SetState(ANYTHING_BUT_WS_AND_NL_STATE);
+	}
+	t=<ANYTHING_BUT_WS_AND_NL>
+	{ 	System.out.println("SetState(DEFAULT)");
+		SetState(DEFAULT);
+		return t;
+	}
+}
+*/
+
+/** @return a token up to the next NL
+Token ANYTHING_BUT_NL():
+{
+Token t;
+}
+{
+	{ SetState(ANYTHING_BUT_WS_AND_NL_STATE); }
+	t=<ANYTHING_BUT_NL>
+	{ SetState(DEFAULT); return t; }
+}
+*/
 
 Token alphanum():
 {
