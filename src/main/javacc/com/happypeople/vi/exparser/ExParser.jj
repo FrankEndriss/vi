@@ -145,7 +145,7 @@ ExCommand tmpCmd;
 ExCommand exCommand():
 {
 ExCommand ret=null;
-List<ExAddress> addressList;
+List<Address> addressList;
 }
 {
 	(
@@ -157,17 +157,19 @@ List<ExAddress> addressList;
 }
 
 // commands with address prefixes, like "1,$s/foo/bar"
-ExCommand addressed_cmd(final List<ExAddress> addressList):
+ExCommand addressed_cmd(final List<Address> addressList):
 {
 ExCommand ret;
 }
 {
+(
 	ret=delete_cmd(addressList)
-	{ return ret; }
+|	ret=copy_cmd(addressList)
+) { return ret; }
 }
 
 // [2addr] d[elete][buffer][count][flags]
-DeleteCmd delete_cmd(List<ExAddress> addressList):
+DeleteCmd delete_cmd(List<Address> addressList):
 {
 BufferRef bufferRef=BufferRef.DEFAULT_BUFFER;
 long number=0;
@@ -188,18 +190,18 @@ void DEL_CMD():
 //       Synopsis:
 //		     [2addr] co[py] 1addr [flags]
 //		     [2addr] t 1addr [flags]
-CopyCmd copy_cmd():
+CopyCmd copy_cmd(List<Address> addressList):
 {
-List<ExAddress> adrList;
-ExAddress adrTarget;
+Address adrTarget;
 }
 {
-	( adrList=address_list() ( "t" | "co" ("p"("y")?)? ) adrTarget=address() 	// flags 
-	) { return new CopyCmd(adrList, adrTarget); }
+	( ( "t" | "co" ("p"("y")?)? ) adrTarget=address() 	// flags 
+	) { return new CopyCmd(addressList, adrTarget); }
 
 }
 
 // < NUMBER	: "0" | ["1"-"9"](["0"-"9"])* >
+// Limited to Long
 long NUMBER():
 {
 StringBuilder sb=new StringBuilder();
@@ -208,13 +210,6 @@ Token t;
 {
 	( "0" { sb.append("0"); } | t=pos_num() { sb.append(t.image); } ( t=num() { sb.append(t.image); } )*
 	) { return Long.parseLong(sb.toString()); }
-
-//	(
-//	t="0" { sb.append(t.image.charAt(0)); } |
-//		((t="1"|t="2"|t="3"|t="4"|t="5"|t="6"|t="7"|t="8"|t="9") { sb.append(t.image.charAt(0)); } 
-//		((t="0"|t="1"|t="2"|t="3"|t="4"|t="5"|t="6"|t="7"|t="8"|t="9") { sb.append(t.image.charAt(0)); })* )
-//	)
-//	{ return sb.toString(); }
 }
 
 BufferRef buffername():
@@ -223,8 +218,7 @@ Token t;
 }
 {
 	// doublequote followed by a single alphanumeric
-	// by specifing it as a parser rule we do not have
-	// to define an _unnice_ token BUFFER or BUFFERNAME
+	// * is special for the system clipboard
 	"\"" (
 		t="a" |t="b" |t="c" |t="d" |t="e" |t="f" |t="g" |t="h" |t="i" |t="j" |
 		t="k" |t="l" |t="m" |t="n" |t="o" |t="p" |t="q" |t="r" |t="s" |t="t" |
@@ -232,26 +226,28 @@ Token t;
 		t="E" |t="F" |t="G" |t="H" |t="I" |t="J" |t="K" |t="L" |t="M" |t="N" |
 		t="O" |t="P" |t="Q" |t="R" |t="S" |t="T" |t="U" |t="V" |t="W" |t="X" |
 		t="Y" |t="Z" |t="0" |t="1" |t="2" |t="3" |t="4" |t="5" |t="6" |t="7" |
-		t="8" |t="9")
+		t="8" |t="9" |t="*")
 	{ return new BufferRef(t.image.charAt(0)); }
 }
 
 // addresses prefix
-List<ExAddress> address_list():
+List<Address> address_list():
 {
-List<ExAddress> ret=new ArrayList<ExAddress>();
-List<ExAddress> tmpList=new ArrayList<ExAddress>();
-ExAddress tmpAddress;
+List<Address> ret=new ArrayList<Address>();
+List<Address> tmpList=new ArrayList<Address>();
+Address tmpAddress;
 }
 {
-	tmpAddress=address() { ret.add(tmpAddress); }  ( "," tmpList=address_list()  { ret.addAll(tmpList); } )?
+// TODO check spec if "%" can be in address_list(), or must stand alone
+(	"%" { ret.add(ExAddress.DOT); ret.add(ExAddress.DOLLAR); }
+|	tmpAddress=address() { ret.add(tmpAddress); } ) ( "," tmpList=address_list()  { ret.addAll(tmpList); } )?
 	{ return ret; }
 }
 
 // Note: address can be emtpy, in which case it is the current line, iE the <DOT>-Address "."
-ExAddress address():
+Address address():
 {
-SimpleAddress simpleAddress=ExAddress.DOT;
+Address simpleAddress=ExAddress.DOT;
 long offset=0;
 }
 {
@@ -279,9 +275,9 @@ long num=1;
 	{ return num*mul; }
 }
 
-SimpleAddress simple_address():
+Address simple_address():
 {
-SimpleAddress ret=null;
+Address ret=null;
 long num=0;
 }
 {

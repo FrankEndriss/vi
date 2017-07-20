@@ -2,7 +2,7 @@ package com.happypeople.vi.exparser;
 
 import com.happypeople.vi.EditContext;
 
-public class AbsoluteAddress implements SimpleAddress {
+public class AbsoluteAddress implements Address {
 
 	private long line;
 

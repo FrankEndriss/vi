@@ -6,18 +6,18 @@ import com.happypeople.vi.EditContext;
 
 public class DeleteCmd extends AbstractExCommand {
 
-	private List<ExAddress> addresses;
-	private BufferRef bufferRef;
-	private long extraAddress;
+	private final List<Address> addresses;
+	private final BufferRef bufferRef;
+	private final long extraAddress;
 
-	public DeleteCmd(List<ExAddress> addressList, BufferRef bufferRef, long extraAddress) {
+	public DeleteCmd(final List<Address> addressList, final BufferRef bufferRef, final long extraAddress) {
 		this.addresses=addressList;
 		this.bufferRef=bufferRef;
 		this.extraAddress=extraAddress;
 	}
 
 	@Override
-	public void execute(EditContext editContext) {
+	public void execute(final EditContext editContext) {
 		throw new RuntimeException("not implemented yet");
 	}
 

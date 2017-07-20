@@ -2,6 +2,6 @@ package com.happypeople.vi.exparser;
 
 import com.happypeople.vi.EditContext;
 
-public interface SimpleAddress {
+public interface Address {
 	public long resolve(EditContext context);
 }

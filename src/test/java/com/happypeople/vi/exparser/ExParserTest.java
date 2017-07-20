@@ -1,6 +1,9 @@
 package com.happypeople.vi.exparser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.StringReader;
 import java.util.Arrays;
@@ -79,8 +82,38 @@ public class ExParserTest {
 	public void testCdCmd() throws ParseException {
 		for(final String s : Arrays.asList("cd bla", "chdir /foo", "chd! /foo/bar", "cd! mydir")) {
 			System.out.println("checking: "+s);
-			ExCommand exCommand=testExCommand(s);
+			final ExCommand exCommand=testExCommand(s);
 			assertTrue(exCommand instanceof CdCmd);
+		}
+	}
+
+	@Test
+	public void testCopyCmd() throws ParseException {
+		for(final String s : Arrays.asList(
+			"1,$co200",
+			"1,200co0",
+			"123co.",
+			"co."
+			))
+		{
+			System.out.println("checking: "+s);
+			final ExCommand exCommand=testExCommand(s);
+			assertTrue(exCommand instanceof CopyCmd);
+		}
+	}
+	@Test
+	public void testDeleteCmd() throws ParseException {
+		for(final String s : Arrays.asList(
+			"1,$d",
+			".,.+3d\"a",
+			"d200",
+			"200d30",
+			"d"
+			))
+		{
+			System.out.println("checking: "+s);
+			final ExCommand exCommand=testExCommand(s);
+			assertTrue(exCommand instanceof DeleteCmd);
 		}
 	}
 }

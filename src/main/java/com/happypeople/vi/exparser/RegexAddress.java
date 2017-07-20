@@ -3,7 +3,7 @@ package com.happypeople.vi.exparser;
 import com.happypeople.vi.EditContext;
 
 /** Line addresses by a regex and search direction */
-public class RegexAddress implements SimpleAddress {
+public class RegexAddress implements Address {
 	public enum Dir {
 		FORWARD,
 		BACKWARD
