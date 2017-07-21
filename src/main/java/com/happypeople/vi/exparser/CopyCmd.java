@@ -14,7 +14,7 @@ public class CopyCmd extends AbstractExCommand {
 	}
 
 	@Override
-	public void execute(final EditContext editContext) {
+	public int execute(final EditContext editContext) {
 		throw new RuntimeException("not implemented yet");
 	}
 

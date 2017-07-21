@@ -372,12 +372,46 @@ RegexAddress.Dir direction=null;
 	}
 }
 
-void action():
+
+//   Write
+//	     [2addr] w[rite][!][>>][file]
+//	     [2addr] w[rite][!][file]
+//	     [2addr] wq[!][>>][file]
+//     If no lines are specified, the lines shall default to the entire file.
+//   Write and Exit
+//	     [2addr] x[it][!][file]
+ExCommand write_cmd(List<Address> addressList):
+{
+boolean doQuit=false;
+boolean exclam=false;
+boolean append=false;
+String fileName=null;
+}
+{
+(
+	(
+	"w"("r"("i"("t"("e")?)?)?)?
+	| "wq" { doQuit=true; }
+	| "x"("i"("t")?)? { doQuit=true; }
+	) ("!" { exclam=true; })? (">>" { append=true; })? (fileName=filename())?
+) {	ExCommand wCmd=new WriteCommand(exclam, append, fileName);
+	if(doQuit)
+		return new ExecuteSecondIfFirstSucceedsCmd(wCmd, new QuitCommand());
+	else
+		return wCmd;
+  }
+}
+
+//   Quit
+//     q[uit][!]
+ExCommand quit_cmd():
 {
 }
 {
-	"w" ("!")? filename()
+	( "q"("u"("i"("t")?)?)? )
+	{ return new QuitCommand(); }
 }
+
 
 String filename():
 {

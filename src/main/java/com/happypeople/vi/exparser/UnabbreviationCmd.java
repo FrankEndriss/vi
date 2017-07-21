@@ -11,7 +11,7 @@ public class UnabbreviationCmd extends AbstractExCommand {
 	}
 
 	@Override
-	public void execute(EditContext editContext) {
+	public int execute(EditContext editContext) {
 		throw new RuntimeException("not implemented yet");
 	}
 

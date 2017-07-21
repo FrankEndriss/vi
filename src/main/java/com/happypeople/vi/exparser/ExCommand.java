@@ -6,7 +6,9 @@ import com.happypeople.vi.EditContext;
  * See "Pattern-oriented Software Achritecture" Vol 1, Command Processor p277
  */
 public interface ExCommand {
-	public void execute(EditContext editContext);
+	public final static int SUCCESS = 0;
+
+	public int execute(EditContext editContext);
 
 	public boolean canUndo();
 	public void undo(EditContext editContext);

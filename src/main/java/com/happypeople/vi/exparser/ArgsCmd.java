@@ -10,7 +10,7 @@ import com.happypeople.vi.GlobalConfig;
 public class ArgsCmd extends AbstractExCommand {
 
 	@Override
-	public void execute(final EditContext editContext) {
+	public int execute(final EditContext editContext) {
 		final StringBuilder sb=new StringBuilder("[");
 		final GlobalConfig conf=editContext.getGlobalConfig();
 		final int argc=Integer.parseInt(conf.getValue("argc"));
@@ -21,6 +21,7 @@ public class ArgsCmd extends AbstractExCommand {
 		}
 		sb.append("]");
 		editContext.getMessageTarget().showMessage(sb.toString());
+		return ExCommand.SUCCESS;
 	}
 
 }

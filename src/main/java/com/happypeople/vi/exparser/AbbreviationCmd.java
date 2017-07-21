@@ -15,7 +15,7 @@ public class AbbreviationCmd extends AbstractExCommand {
 	}
 
 	@Override
-	public void execute(EditContext editContext) {
+	public int execute(EditContext editContext) {
 		// TODO store the mapping in editContext
 		throw new RuntimeException("not implemented yet");
 	}

@@ -39,7 +39,7 @@ class ScreenLine {
 	 */
 	public ScreenCursorPosition getScreenPos(final long logicalX) {
 		final long displayX=getDisplayX(logicalX);
-		log.info("in getScreenPos(), displayX="+displayX+" screenSizeX="+screenSizeX);
+		//log.debug("in getScreenPos(), displayX="+displayX+" screenSizeX="+screenSizeX);
 		return ScreenCursorPosition.ORIGIN.addX(displayX%screenSizeX).addY(displayX/screenSizeX);
 	}
 

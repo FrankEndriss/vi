@@ -47,12 +47,11 @@ public class AwtView implements View {
 
 	/** Blinking frequency of cursor */
 	private final static long C_BLINK_MILLIES=750;
-	/** Color of the cursor */
-	private final static Color C_COLOR=Color.RED;
 
-	//private final LinesModel linesModel;
+	/** The swing Component where the real drawing is done. */
 	private final JComponent paintingArea;
 
+	/** Set of event listeners. */
 	private final Set<ViewSizeChangedEventListener> viewSizeChangedEventListeners=new HashSet<>();
 
 	/** Last drawn screen cursor position.
@@ -68,8 +67,6 @@ public class AwtView implements View {
 	private String charUnderCursor=" ";
 
 	private final ScreenBuffer screenBuffer=new ScreenBuffer();
-
-	//private final ScreenModel screenModel;
 
 	private final JFrame frame;
 
@@ -243,9 +240,9 @@ public class AwtView implements View {
 					final int intersectX=Math.min(newImage.getWidth(), image.getWidth());
 					final int intersectY=Math.min(newImage.getHeight(), image.getHeight());
 					g.drawImage(image,
-						0, 0, intersectX, intersectY,
-						0, 0, intersectX, intersectY,
-						null);
+							0, 0, intersectX, intersectY,
+							0, 0, intersectX, intersectY,
+							null);
 					this.image=newImage;
 					this.g=g;
 					sizeColumns=newSizeColumns;
@@ -296,7 +293,6 @@ public class AwtView implements View {
 		}
 
 		private void renderCursor() {
-			// render the cursor, most likely its blinking state has changed
 			final boolean cursorVisible=(((System.currentTimeMillis()-cTime)/C_BLINK_MILLIES)&0x1)==0;
 
 			final int lineStartPx=(int)(fontData.lineHeight*sPos.getY());
@@ -308,18 +304,6 @@ public class AwtView implements View {
 			g.setColor(cursorVisible?Color.BLACK:Color.WHITE);
 			g.drawString(charUnderCursor, colStartPx, lineStartPx+fontData.fontMetrics.getMaxAscent());
 			paintingArea.repaint(colStartPx, lineStartPx, fontData.colWidht, fontData.lineHeight);
-
-			/*
-				final int rgbWhite=Color.WHITE.getRGB();
-				// draw every white pixel in BLACK and all others in WHITE
-				// note that this is highly ineffecient...
-				for(int pLine=lineStartPx; pLine<lineStartPx+fontData.lineHeight; pLine++) {
-					for(int pCol=colStartPx; pCol<colStartPx+fontData.colWidht; pCol++) {
-						g.setColor(image.getRGB(pCol, pLine)==rgbWhite?Color.BLACK:Color.WHITE); // invert Colors
-						g.fillRect(pCol, pLine, 1, 1);
-					}
-				}
-				*/
 		}
 
 		public void render(final ScreenModelChangedEvent evt) {
@@ -383,7 +367,7 @@ public class AwtView implements View {
 						// simply draw the line string
 						g.drawString(screenLine, 0, baselinePx-fm.getDescent());
 					}
-					*/
+					 */
 					baselinePx+=fontData.lineHeight;
 					linestartPx+=fontData.lineHeight;
 					if(screenLineNo==sPos.getY()) {

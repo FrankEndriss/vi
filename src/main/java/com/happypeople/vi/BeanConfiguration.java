@@ -1,12 +1,6 @@
 package com.happypeople.vi;
 
-import java.awt.event.KeyEvent;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 
 @Configuration
 public class BeanConfiguration {
@@ -37,6 +31,6 @@ public class BeanConfiguration {
 	public CursorModelFactory cursorModelFactory() {
 		return new CursorModelFactory();
 	}
-	*/
+	 */
 
 }
