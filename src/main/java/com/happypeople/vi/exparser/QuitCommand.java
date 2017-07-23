@@ -5,8 +5,13 @@ import com.happypeople.vi.EditContext;
 /** End an EditContext
  */
 public class QuitCommand extends AbstractExCommand {
+	private final boolean exclamated;
+	public QuitCommand(final boolean exclamated) {
+		this.exclamated=true;
+	}
 	@Override
 	public int execute(final EditContext editContext) {
+		editContext.close();
 		throw new RuntimeException("not implemented yet");
 	}
 

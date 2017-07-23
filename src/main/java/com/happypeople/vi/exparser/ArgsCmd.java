@@ -13,7 +13,7 @@ public class ArgsCmd extends AbstractExCommand {
 	public int execute(final EditContext editContext) {
 		final StringBuilder sb=new StringBuilder("[");
 		final GlobalConfig conf=editContext.getGlobalConfig();
-		final int argc=Integer.parseInt(conf.getValue("argc"));
+		final int argc=Integer.parseInt(conf.getValue("argc").orElse("0"));
 		for(int i=0; i<argc; i++) {
 			if(i>0)
 				sb.append(", ");

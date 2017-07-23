@@ -1,11 +1,13 @@
 package com.happypeople.vi;
 
+import java.util.Optional;
+
 public interface GlobalConfig {
-	
+
 	/** Returns a globally configurated key/value
 	 * @param key some key
-	 * @return the value for key, null if undef
+	 * @return the value for key
 	 */
-	public String getValue(String key);
+	public Optional<String> getValue(String key);
 
 }

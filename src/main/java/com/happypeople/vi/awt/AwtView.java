@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import com.happypeople.vi.MessageTarget;
 import com.happypeople.vi.ScreenCursorPosition;
 import com.happypeople.vi.ScreenModel;
 import com.happypeople.vi.ScreenModelChangedEvent;
@@ -42,7 +43,7 @@ import com.happypeople.vi.View;
  */
 @Component
 @Scope("prototype")
-public class AwtView implements View {
+public class AwtView implements View, MessageTarget {
 	final static Logger log=LoggerFactory.getLogger(AwtView.class);
 
 	/** Blinking frequency of cursor */
@@ -454,4 +455,9 @@ public class AwtView implements View {
 		};
 	}
 
+	@Override
+	public void showMessage(final String msg) {
+		// TODO implement
+		System.out.println("showMessage: "+msg);
+	}
 }

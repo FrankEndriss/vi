@@ -10,11 +10,11 @@ import java.util.List;
 /** LinesModel based on a readonly file
  */
 public class ROFileLinesModelImpl extends AbstracLinesModelImpl {
-	
-	private RandomAccessFile ras;
+
+	private final RandomAccessFile ras;
 
 	/** List of offsets into ras where lines start */
-	private List<Long> lineStartingOffsets=new ArrayList<Long>();
+	private final List<Long> lineStartingOffsets=new ArrayList<>();
 
 
 	/** TODO add File encoding paramter
@@ -25,7 +25,7 @@ public class ROFileLinesModelImpl extends AbstracLinesModelImpl {
 		ras=new RandomAccessFile(file, "r");
 		recreateLinesIndex();
 	}
-	
+
 	private void recreateLinesIndex() throws IOException {
 		ras.seek(0);
 		lineStartingOffsets.clear();
@@ -47,7 +47,7 @@ public class ROFileLinesModelImpl extends AbstracLinesModelImpl {
 					lastByteWasLineEnd=true;
 			}
 		}while(b>0);
-		
+
 	}
 
 	/** Note that an empty file has length=1, since the first line is the empty line (implicit line end at end of file)
@@ -59,7 +59,7 @@ public class ROFileLinesModelImpl extends AbstracLinesModelImpl {
 	}
 
 	@Override
-	public String get(long lineNo) {
+	public String get(final long lineNo) {
 		final ByteArrayOutputStream baos=new ByteArrayOutputStream();
 		try {
 			ras.seek(lineStartingOffsets.get((int)lineNo));
@@ -74,10 +74,29 @@ public class ROFileLinesModelImpl extends AbstracLinesModelImpl {
 
 			return new String(baos.toByteArray());
 
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 			throw new IllegalStateException("cannot seek/read file");
 		}
 	}
 
+	@Override
+	public void replace(final long lineNo, final String newVersionOfLine) {
+		throw new IllegalStateException("this is readonly");
+	}
+
+	@Override
+	public void insertAfter(final long lineNo, final String newLine) {
+		throw new IllegalStateException("this is readonly");
+	}
+
+	@Override
+	public void insertBefore(final long lineNo, final String newLine) {
+		throw new IllegalStateException("this is readonly");
+	}
+
+	@Override
+	public void remove(final long lineNo) {
+		throw new IllegalStateException("this is readonly");
+	}
 }

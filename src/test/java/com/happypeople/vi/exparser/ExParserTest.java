@@ -11,6 +11,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.happypeople.vi.EditContext;
+
 public class ExParserTest {
 
 	private List<ExCommand> testExCommandLine(final String cmd) throws ParseException {
@@ -115,5 +117,59 @@ public class ExParserTest {
 			final ExCommand exCommand=testExCommand(s);
 			assertTrue(exCommand instanceof DeleteCmd);
 		}
+	}
+
+	@Test
+	public void testWriteCmd() throws ParseException {
+		for(final String s : Arrays.asList(
+			"w",
+			"wq",
+			"w!",
+			"wq!",
+			"w /tmp/bla.f",
+			"w! /tmp/bla.f",
+			"wq /tmp/bla.f",
+			"wq! /tmp/bla.f",
+			"1,100w /tmp/bla.f",
+			"37wq! /tmp/bla.f",
+			"%wq! /tmp/bla.f",
+			"12,+1++-wq! /tmp/bla.f"
+			))
+		{
+			System.out.println("checking: "+s);
+			final ExCommand exCommand=testExCommand(s);
+			assertTrue(exCommand instanceof ExCommand);
+		}
+	}
+
+	private List<Address> parseAddressList(final String str) throws ParseException {
+		final ExParser parser=new ExParser(new StringReader(str));
+		return parser.address_list();
+	}
+
+	@Test
+	public void testAddressList() throws ParseException {
+		final EditContext editContext=null;
+
+		List<Address> result=parseAddressList("1,$");
+		assertEquals("should be size two", 2, result.size());
+		assertEquals("first line x 1", 1, result.get(0).resolve(editContext));
+		//assertEquals("last line DOLLAR", ExAddress.DOLLAR, result.get(1));
+
+		result=parseAddressList("200");
+		assertEquals("should be size one", 1, result.size());
+		assertEquals("first adr line 200", 200, result.get(0).resolve(editContext));
+
+		result=parseAddressList("200-1");
+		assertEquals("should be size one", 1, result.size());
+		assertEquals("first adr line 199", 199, result.get(0).resolve(editContext));
+
+		result=parseAddressList("200-");
+		assertEquals("should be size one", 1, result.size());
+		assertEquals("first adr line 199", 199, result.get(0).resolve(editContext));
+
+		result=parseAddressList("200-1+--30");
+		assertEquals("should be size one", 1, result.size());
+		assertEquals("first adr line 169", 169, result.get(0).resolve(editContext));
 	}
 }

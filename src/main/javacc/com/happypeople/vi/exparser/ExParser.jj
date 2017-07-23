@@ -145,14 +145,16 @@ ExCommand tmpCmd;
 ExCommand exCommand():
 {
 ExCommand ret=null;
-List<Address> addressList;
+List<Address> addressList=Arrays.asList(ExAddress.FIRST, ExAddress.DOLLAR);
 }
 {
 	(
 	ret=abbreviation_cmd()
+|	ret=unabbreviation_cmd()
 |	ret=args_cmd()
 |	ret=cd_cmd()
-|	addressList=address_list() ret=addressed_cmd(addressList)
+|	ret=quit_cmd()
+|	(addressList=address_list())? ret=addressed_cmd(addressList)
 	)	{ return ret; }
 }
 
@@ -165,6 +167,7 @@ ExCommand ret;
 (
 	ret=delete_cmd(addressList)
 |	ret=copy_cmd(addressList)
+|	ret=write_cmd(addressList)
 ) { return ret; }
 }
 
@@ -239,20 +242,21 @@ Address tmpAddress;
 }
 {
 // TODO check spec if "%" can be in address_list(), or must stand alone
-(	"%" { ret.add(ExAddress.DOT); ret.add(ExAddress.DOLLAR); }
+(	"%" { ret.add(ExAddress.FIRST); ret.add(ExAddress.DOLLAR); }
 |	tmpAddress=address() { ret.add(tmpAddress); } ) ( "," tmpList=address_list()  { ret.addAll(tmpList); } )?
 	{ return ret; }
 }
 
-// Note: address can be emtpy, in which case it is the current line, iE the <DOT>-Address "."
 Address address():
 {
 Address simpleAddress=ExAddress.DOT;
 long offset=0;
 }
 {
-	(simpleAddress=simple_address())? ( offset=address_offset_list() )?
-	{ return new ExAddress(simpleAddress, offset); }
+(
+	simpleAddress=simple_address() ( offset=address_offset_list() )?
+|	offset=address_offset_list()
+) { return new ExAddress(simpleAddress, offset); }
 }
 
 long address_offset_list():
@@ -282,8 +286,8 @@ long num=0;
 }
 {
 (
-	"."			{ ret=new DotAddress(); }		// current line
-|	"$"			{ ret=new DollarAddress(); }	// last line
+	"."			{ ret=ExAddress.DOT;		}		// current line
+|	"$"			{ ret=ExAddress.DOLLAR;		}		// last line
 |	num=NUMBER() { ret=new AbsoluteAddress(num); }	// that line
 |	ret=regex()									// next/prev line matching
 ) { return ret; }
@@ -396,7 +400,7 @@ String fileName=null;
 	) ("!" { exclam=true; })? (">>" { append=true; })? (fileName=filename())?
 ) {	ExCommand wCmd=new WriteCommand(exclam, append, fileName);
 	if(doQuit)
-		return new ExecuteSecondIfFirstSucceedsCmd(wCmd, new QuitCommand());
+		return new ExecuteSecondIfFirstSucceedsCmd(wCmd, new QuitCommand(true));
 	else
 		return wCmd;
   }
@@ -406,10 +410,11 @@ String fileName=null;
 //     q[uit][!]
 ExCommand quit_cmd():
 {
+boolean exclam=false;
 }
 {
-	( "q"("u"("i"("t")?)?)? )
-	{ return new QuitCommand(); }
+	"q"("u"("i"("t")?)?)? ("!" { exclam=true; } )?
+	{ return new QuitCommand(exclam); }
 }
 
 
