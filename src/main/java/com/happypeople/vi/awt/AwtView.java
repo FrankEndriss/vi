@@ -210,7 +210,7 @@ public class AwtView implements View, MessageTarget {
 		private int sizeLines=0;
 
 		ScreenBuffer() {
-			setFont(new Font("monospaced", Font.PLAIN, 15));
+			setFont(new Font(Font.MONOSPACED, Font.PLAIN, 15));
 		}
 
 		public void setFont(final Font font) {
