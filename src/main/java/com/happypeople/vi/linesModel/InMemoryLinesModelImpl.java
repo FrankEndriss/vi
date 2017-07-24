@@ -7,24 +7,24 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import com.happypeople.vi.LinesModelChangedEvent;
-import com.happypeople.vi.LinesModelEditor;
 
 /** Implementation of LinesModel based on apache commons TreeList
  * in memory only.
  */
 @Component
 @Scope("prototype")
-public class InMemoryLinesModelImpl extends AbstracLinesModelImpl implements LinesModelEditor {
+public class InMemoryLinesModelImpl extends AbstracLinesModelImpl {
 	private final static Logger log=LoggerFactory.getLogger(InMemoryLinesModelImpl.class);
 
 	private final TreeList<String> content=new TreeList<String>();
+
 	@Override
 	public long getSize() {
 		return content.size();
 	}
 
 	@Override
-	public String get(long lineNo) {
+	public String get(final long lineNo) {
 		return content.get((int)lineNo);
 	}
 
@@ -41,7 +41,7 @@ public class InMemoryLinesModelImpl extends AbstracLinesModelImpl implements Lin
 	}
 
 	@Override
-	public void insertBefore(final long lineNo, String newLine) {
+	public void insertBefore(final long lineNo, final String newLine) {
 		content.add((int)lineNo, newLine);
 		fireChange(new LinesModelChangedEvent(lineNo, LinesModelChangedEvent.LinesModelChangeType.INSERT));
 	}
@@ -51,5 +51,5 @@ public class InMemoryLinesModelImpl extends AbstracLinesModelImpl implements Lin
 		content.remove((int)lineNo);
 		fireChange(new LinesModelChangedEvent(lineNo, LinesModelChangedEvent.LinesModelChangeType.REMOVE));
 	}
-	
+
 }
