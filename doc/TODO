@@ -88,7 +88,7 @@ work for this project.
 *************************************** DONE *******************************************
 ****************************************************************************************
 ----------------------------------------------------------------------------------------
-Änderungen in der Größe des GUI-Fensters sollen/m�ssen sich auf die grö´e des
+änderungen in der Größe des GUI-Fensters sollen/m�ssen sich auf die grö´e des
 View-Bereiches auswirken.
 Dabei ist ggf auf die Änderung der Größe des Buffer-Images zu be�rcksichtigen.
 ----------------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ Deshalb kann man nicht einfach alle Objekte als Beans definieren. Explizit Scope
 zu implementieren scheint auch eher aufw�ndig.
 Deshalb gehen wir nun wie folgt vor:
 Alle relevanten Klassen werden als "prototype" beans definiert.
-F�r alle relevanten Interfaces gibt es je eine Factory-Klasse, diese ist ein singleton
+Für alle relevanten Interfaces gibt es je eine Factory-Klasse, diese ist ein singleton
 bean. Die implementierung dieser FactoryKlassen erzeugt die Objekte je �ber Aufrufe
 zu context.getBean("name", constructorArg, ...);
 

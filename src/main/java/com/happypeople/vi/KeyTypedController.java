@@ -29,10 +29,10 @@ public interface KeyTypedController { //extends KeyListener {
     /** Adds a listener for ModeChangeEvents. Note that the listener
      * is called once asynchronously with the current mode.
      * So no getMode() is needed nor available.
-     * @param listener 
+     * @param listener
      */
     void addModeChangedEventListener(ModeChangedEventListener listener);
 
     /** Reads input from inputQueue until null reference is found, ie the queue is kind of closed. */
-    void processInput(BlockingQueue<KeyEvent> inputQueue);
+    void processInput(BlockingQueue<KeyEvent> inputQueue, EditContext editContext);
 }

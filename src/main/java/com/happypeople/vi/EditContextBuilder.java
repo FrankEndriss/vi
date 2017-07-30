@@ -3,10 +3,12 @@ package com.happypeople.vi;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.happypeople.vi.awt.AwtView;
+import com.happypeople.vi.exparser.ExParser;
 import com.happypeople.vi.linesModel.InMemoryLinesModelImpl;
 import com.happypeople.vi.linesModel.ROFileLinesModelImpl;
 
@@ -53,9 +55,12 @@ public class EditContextBuilder {
 		final CursorModel cursorModel=new CursorModelImpl(linesModel, viewModel);
 		view.addViewSizeChangedEventListener(cursorModel);
 
+		final ExCommandProcessor exCommandProcessor=new ExCommandProcessor();
+		final ExParser exParser=new ExParser(new StringReader(""));
+
 		// run the application by accepting input
 		//final KeyTypedController controller=context.getBean(ViController.class, linesModel, cursorModel);
-		final KeyTypedController controller=new ViController(linesModel, cursorModel);
+		final KeyTypedController controller=new ViController(linesModel, cursorModel, exCommandProcessor, exParser);
 
 		// TODO move to own class/file, iE GenericEditContext or the like
 		return new EditContext() {
@@ -82,7 +87,7 @@ public class EditContextBuilder {
 
 			@Override
 			public void run() {
-				controller.processInput(inputQueue);
+				controller.processInput(inputQueue, this);
 			}
 
 			@Override

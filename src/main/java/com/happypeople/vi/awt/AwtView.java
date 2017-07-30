@@ -6,6 +6,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
@@ -234,6 +235,13 @@ public class AwtView implements View, MessageTarget {
 				final BufferedImage newImage=new BufferedImage(
 						newSizeColumns*fontData.colWidht, newSizeLines*fontData.lineHeight, BufferedImage.TYPE_INT_RGB);
 				final Graphics2D g=newImage.createGraphics();
+			    if(g instanceof Graphics2D)
+			    {
+			        final Graphics2D g2d = g;
+			        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+			        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			        g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED);
+			    }
 				g.setColor(COLOR_BACKGROUND);
 				g.fillRect(0, 0, newImage.getWidth(), newImage.getHeight());
 

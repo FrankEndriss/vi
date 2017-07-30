@@ -69,53 +69,6 @@ public class ViApplication {
 		// TODO think about how to run an editContext, especially if there is more than one
 		editContext.run();
 
-
-		/*
-
-		//final AwtViewFactory awtViewFactory=context.getBean(AwtViewFactory.class);
-		final LinesModelFactory linesModelFactory=context.getBean(LinesModelFactory.class);
-		//final ViewModelFactory viewModelFactory=context.getBean(ViewModelFactory.class);
-		final CursorModelFactory cursorModelFactory=context.getBean(CursorModelFactory.class);
-
-		// TODO springify
-		final BlockingQueue<KeyEvent> inputQueue=new LinkedBlockingQueue<>();
-
-		// TODO parse args
-
-		final LinesModel linesModel;
-		if(cliArgs.nonOptionArguments().isEmpty()) {
-			final LinesModelEditor linesModelE=linesModelFactory.createEmpty();
-
-			// remove for testing
-			linesModelE.insertBefore(0, "firstLine");
-			linesModelE.insertAfter(0, "secondLine");
-			linesModelE.insertAfter(1, "thirdLine is longer...and next is an empty line");
-			linesModelE.insertAfter(2, "");
-			linesModelE.insertAfter(3, "last (fifth) line");
-			for(int i=4; i<100; i++)
-				linesModelE.insertAfter(i, "another..."+i);
-			linesModel=linesModelE;
-		}else {
-			final Object arg=cliArgs.nonOptionArguments().get(0);
-			linesModel=new ROFileLinesModelImpl(new File(""+arg));
-		}
-
-//		final View view= awtViewFactory.createAwtView(screenModel, inputQueue);
-		final AwtView view= new AwtView(inputQueue);
-		final ScreenModel screenModel=new ScreenModelImpl();
-		screenModel.addScreenModelChangedEventListener(view);
-
-//		final ViewModel viewModel=viewModelFactory.createViewModel(linesModel, screenModel);
-		final ViewModel viewModel=new SimpleViewModelImpl(linesModel, screenModel);
-
-		final CursorModel cursorModel=cursorModelFactory.createCursorModel(linesModel, viewModel);
-		view.addViewSizeChangedEventListener(cursorModel);
-
-		// run the application by accepting input
-		final KeyTypedController controller=context.getBean(ViController.class, linesModel, cursorModel);
-		controller.processInput(inputQueue);
-		*/
-
 	}
 
 }

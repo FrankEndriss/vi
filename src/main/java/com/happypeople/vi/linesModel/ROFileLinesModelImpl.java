@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,6 +59,8 @@ public class ROFileLinesModelImpl extends AbstracLinesModelImpl {
 		return lineStartingOffsets.size();
 	}
 
+	private final static Charset charset=Charset.forName("UTF-8");
+
 	@Override
 	public String get(final long lineNo) {
 		final ByteArrayOutputStream baos=new ByteArrayOutputStream();
@@ -72,7 +75,8 @@ public class ROFileLinesModelImpl extends AbstracLinesModelImpl {
 					break;
 			}while(true);
 
-			return new String(baos.toByteArray());
+//			return new String(baos.toByteArray());
+			return new String(baos.toByteArray(), charset);
 
 		} catch (final IOException e) {
 			e.printStackTrace();
