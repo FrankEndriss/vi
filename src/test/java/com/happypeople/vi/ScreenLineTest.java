@@ -65,11 +65,11 @@ public class ScreenLineTest {
 	/** Test render String with tabs */
 	@Test
 	public void testRender2() {
-		assertEquals("should be equal", "\b\b\b\bHello", new ScreenLine("\tHello", 80).render(1024));
-		assertEquals("should be equal", "H\b\b\bello", new ScreenLine("H\tello", 80).render(1024));
-		assertEquals("should be equal", "He\b\bllo", new ScreenLine("He\tllo", 80).render(1024));
-		assertEquals("should be equal", "Hel\blo", new ScreenLine("Hel\tlo", 80).render(1024));
-		assertEquals("should be equal", "Hell\b\b\b\bo", new ScreenLine("Hell\to", 80).render(1024));
+		assertEquals("should be equal", "    Hello", new ScreenLine("\tHello", 80).render(1024));
+		assertEquals("should be equal", "H   ello", new ScreenLine("H\tello", 80).render(1024));
+		assertEquals("should be equal", "He  llo", new ScreenLine("He\tllo", 80).render(1024));
+		assertEquals("should be equal", "Hel lo", new ScreenLine("Hel\tlo", 80).render(1024));
+		assertEquals("should be equal", "Hell    o", new ScreenLine("Hell\to", 80).render(1024));
 	}
 
 	/** Test screenPosition calculation over complex String (with TABs) */

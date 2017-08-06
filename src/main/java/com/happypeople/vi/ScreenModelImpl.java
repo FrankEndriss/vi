@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** This class models the visible screen.
- * All in all, it is a Deque<ScreenLine>
+ * All in all, it is a Dequeue<ScreenLine>
  */
 public class ScreenModelImpl implements ScreenModel {
 	private final static Logger log=LoggerFactory.getLogger(ScreenModelImpl.class);
@@ -28,6 +28,8 @@ public class ScreenModelImpl implements ScreenModel {
 	private ScreenCursorPosition screenCursorPosition=ScreenCursorPosition.ORIGIN;
 
 	private final Set<ScreenModelChangedEventListener> screenModelChangedEventListeners=new HashSet<>();
+
+	private String currentMessage;
 
 	@Override
 	public void setSizeX(final int sizeX) {
@@ -131,6 +133,17 @@ public class ScreenModelImpl implements ScreenModel {
 		for(final ScreenModelChangedEventListener listener : screenModelChangedEventListeners) {
 			listener.screenModelChanged(new ScreenModelChangedEvent(this));
 		}
+	}
+
+	@Override
+	public void showMessage(final String msg) {
+		this.currentMessage=msg;
+		// TODO fire nicer event
+		fireChanged();
+	}
+	@Override
+	public String getCurrentMessage() {
+		return currentMessage;
 	}
 
 }

@@ -116,15 +116,13 @@ public class ViController implements KeyTypedController {
 				return inputModeStrategy_Vi_MODE;
 			} else {
 				cmdStringBuilder.append(keyEvent.getKeyChar());
+				editContext.getMessageTarget().showMessage(":"+cmdStringBuilder);
 				return this;
 			}
 			// TODO
-			// - read/edit a line of input on ExInputLine
-			// - wrap that line into an InputStream
-			// - instantiate ExParser on that InputStream
-			// - hand List<ExCommand> to command processor
-			// - switch back to VI_MODE
-
+			// - exit/clear cmdStringBuilder on ESC
+			// - display a cursor in message/edit line
+			// - implement edit commands as documented in vim
 		}
 	}
 

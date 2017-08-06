@@ -1,6 +1,6 @@
 package com.happypeople.vi;
 
-public interface ScreenModel {
+public interface ScreenModel extends MessageTarget {
 
 	/** Sets the column count of the screen
 	 * @param sizeX
@@ -67,4 +67,9 @@ public interface ScreenModel {
 	 */
 	ScreenCursorPosition getCursorPosition();
 
+	/** TODO get rid of this getter
+	 * should be instead something like processMessage(Filter<String> processor)
+	 * @return the currentMessage, usually displayed in the last line on screen
+	 */
+	String getCurrentMessage();
 }

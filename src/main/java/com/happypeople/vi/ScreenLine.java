@@ -94,7 +94,7 @@ class ScreenLine {
 			if(c=='\t') {
 				pos=calcTabPos(pos);
 				do {
-					sb.append('\b');
+					sb.append(' ');
 				} while(sb.length()<=pos);
 			} else { // TODO do something with non printable chars
 				pos++;

@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.happypeople.vi.MessageTarget;
 import com.happypeople.vi.ScreenCursorPosition;
 import com.happypeople.vi.ScreenModel;
 import com.happypeople.vi.ScreenModelChangedEvent;
@@ -44,7 +43,7 @@ import com.happypeople.vi.View;
  */
 @Component
 @Scope("prototype")
-public class AwtView implements View, MessageTarget {
+public class AwtView implements View {
 	final static Logger log=LoggerFactory.getLogger(AwtView.class);
 
 	/** Blinking frequency of cursor */
@@ -71,6 +70,8 @@ public class AwtView implements View, MessageTarget {
 	private final ScreenBuffer screenBuffer=new ScreenBuffer();
 
 	private final JFrame frame;
+
+	private String currentMessage;
 
 	/** TODO add a "addKeyEventListener(...)" method, to get rid of the
 	 * constructor arg keyEventTarget.
@@ -332,12 +333,7 @@ public class AwtView implements View, MessageTarget {
 
 				for(final String screenLine : split2line(logicalLine, sizeColumns)) {
 
-					// calc real Position. cPosX can be after the end of line. In this case we
-					// display the cursor at the last char of the line.
-					// If the line is empty we position the cursor at lCPosX=0
-					//final long lCPosX= cPosX<screenLine.length() ? cPosX : (screenLine.length()-1<0? 0 : screenLine.length()-1);
-
-					// redraw background
+					// redraw background line by line
 					g.setColor(COLOR_BACKGROUND);
 					g.fillRect(0, linestartPx, image.getWidth(), fontData.lineHeight);
 					g.setColor(Color.WHITE);
@@ -345,45 +341,13 @@ public class AwtView implements View, MessageTarget {
 					// simply draw the string
 					g.drawString(screenLine, 0, baselinePx);
 
-					/*
-					if(cPosY==screenLineNo && (((System.currentTimeMillis()-cTime)/C_BLINK_MILLIES)&0x1)==0) { // cursor visible blink phase
-						// split the line in the part before the cursor, the cursor, and the part after the cursor
-						int cursorXoffset=0;
-
-						if(lCPosX>0) { // left of cursor
-							final String leftStr=screenLine.substring(0, (int)lCPosX);
-							cursorXoffset=fm.stringWidth(leftStr);
-							g.drawString(leftStr, 0, baselinePx-fm.getDescent());
-						}
-						// for empty lines there is no char under the cursor, no char at position 0. In this case we use the blank
-						final String cursorChar=screenLine.length()>0?screenLine.substring((int)lCPosX, (int)lCPosX+1) : "\b";
-						final int cursorWidth=fm.stringWidth(cursorChar);
-
-						// draw the Cursor, that is the Cursor background,
-						g.setColor(C_COLOR);
-						g.fillRect(cursorXoffset, baselinePx-lineHeight, cursorWidth, lineHeight);
-
-						// ...and the character in the cursor
-						g.setColor(Color.WHITE);
-						g.drawString(cursorChar, cursorXoffset, baselinePx-fm.getDescent());
-
-						// draw the part right of the cursor
-						if(lCPosX<screenLine.length()-1) {
-							final String rightStr=screenLine.substring((int)lCPosX+1);
-							g.drawString(rightStr, cursorXoffset+cursorWidth, baselinePx-fm.getDescent());
-						}
-					} else {
-						// simply draw the line string
-						g.drawString(screenLine, 0, baselinePx-fm.getDescent());
-					}
-					 */
 					baselinePx+=fontData.lineHeight;
 					linestartPx+=fontData.lineHeight;
 					if(screenLineNo==sPos.getY()) {
 						if(screenLine.length()>sPos.getX())
 							charUnderCursor=screenLine.substring((int)sPos.getX(), (int)sPos.getX()+1);
 						else
-							charUnderCursor="\b";
+							charUnderCursor=" ";
 					}
 					screenLineNo++;
 				}
@@ -400,10 +364,30 @@ public class AwtView implements View, MessageTarget {
 				screenLineNo++;
 			}
 
+			renderMessageLine(screenModel);
 			renderCursor();
 
 			// trigger repaint int AWT-Thread
 			paintingArea.repaint();
+		}
+
+		/** If currentMessage is not empty then displays
+		 * currentMessage in last line of screen.
+		 * @param screenModel
+		 */
+		private void renderMessageLine(final ScreenModel screenModel) {
+			final String lMsg=screenModel.getCurrentMessage();
+			log.info("renderMessageLine(), line="+lMsg);
+			if(lMsg!=null && lMsg.length()>0) {
+				// find position of last line on screen
+				final long screenLines=screenModel.getScreenLineCount();
+				final long linePx=fontData.fontMetrics.getMaxAscent() + ((screenLines-1)*fontData.lineHeight);
+				log.info("renderMessageLine(), linePx="+linePx);
+				g.setColor(COLOR_BACKGROUND);
+				g.fillRect(0, (int)linePx-fontData.lineHeight, image.getWidth(), fontData.lineHeight);
+				g.setColor(Color.WHITE);
+				g.drawString(lMsg, 0, linePx);
+			}
 		}
 
 		public int getSizeLines() {
@@ -461,11 +445,5 @@ public class AwtView implements View, MessageTarget {
 				return y;
 			}
 		};
-	}
-
-	@Override
-	public void showMessage(final String msg) {
-		// TODO implement
-		System.out.println("showMessage: "+msg);
 	}
 }

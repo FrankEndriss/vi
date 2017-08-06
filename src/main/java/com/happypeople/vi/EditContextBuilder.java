@@ -77,7 +77,7 @@ public class EditContextBuilder {
 
 			@Override
 			public MessageTarget getMessageTarget() {
-				return view;
+				return screenModel;
 			}
 
 			@Override
