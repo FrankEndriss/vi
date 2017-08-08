@@ -25,6 +25,11 @@ public interface EditContext {
 	public MessageTarget getMessageTarget();
 
 	/**
+	 * @return the view of this EditContext
+	 */
+	public View getView();
+
+	/**
 	 * @return the configuration of this process
 	 */
 	public GlobalConfig getGlobalConfig();

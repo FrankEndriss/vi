@@ -72,4 +72,9 @@ public interface ScreenModel extends MessageTarget {
 	 * @return the currentMessage, usually displayed in the last line on screen
 	 */
 	String getCurrentMessage();
+
+	/** Forces a complete repaint of the current screen,
+	 * usefull after change of Font or the like.
+	 */
+	void forceRepaint();
 }

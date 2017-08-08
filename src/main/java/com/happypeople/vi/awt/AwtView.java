@@ -89,19 +89,10 @@ public class AwtView implements View {
 
 			@Override
 			public void componentResized(final ComponentEvent e) {
-				final int oldX=screenBuffer.getSizeColumns();
-				final int oldY=screenBuffer.getSizeLines();
-
 				final java.awt.Component c=e.getComponent();
-				screenBuffer.resize(c.getWidth(), c.getHeight());
-
-				final int newX=screenBuffer.getSizeColumns();
-				final int newY=screenBuffer.getSizeLines();
-
-				if(oldX!=newX || oldY!=newY) {
-					fireViewSizeChanged(screenBuffer.getSizeColumns(), screenBuffer.getSizeLines());
-				}
+				recalcViewSizes(c.getWidth(), c.getHeight());
 			}
+
 
 			@Override
 			public void componentMoved(final ComponentEvent e) {
@@ -119,7 +110,9 @@ public class AwtView implements View {
 			}
 		});
 
-		// add the listener for keyboard events
+		// Add the listener for keyboard events.
+		// Note that keyTyped and keyPressed
+		// Events are forwarded, keyReleased are not.
 		frame.addKeyListener(new KeyListener() {
 
 			@Override
@@ -129,14 +122,12 @@ public class AwtView implements View {
 
 			@Override
 			public void keyPressed(final KeyEvent e) {
-				// TODO Auto-generated method stub
-
+				keyEventTarget.offer(e);
 			}
 
 			@Override
 			public void keyReleased(final KeyEvent e) {
 				// TODO Auto-generated method stub
-
 			}
 		});
 
@@ -170,6 +161,20 @@ public class AwtView implements View {
 		frame.setVisible(true);
 	}
 
+	private void recalcViewSizes(final int pxX, final int pxY) {
+		final int oldX=screenBuffer.getSizeColumns();
+		final int oldY=screenBuffer.getSizeLines();
+
+		screenBuffer.resize(pxX, pxY);
+
+		final int newX=screenBuffer.getSizeColumns();
+		final int newY=screenBuffer.getSizeLines();
+
+		if(oldX!=newX || oldY!=newY) {
+			fireViewSizeChanged(screenBuffer.getSizeColumns(), screenBuffer.getSizeLines());
+		}
+	}
+
 	@Override
 	public void setVisible(final boolean visible) {
 		frame.setVisible(visible);
@@ -196,11 +201,26 @@ public class AwtView implements View {
 		public int colWidht;
 	}
 
+	/** Changes the size of the current Font by increment
+	 * @param increment usually 1 or -1
+	 */
+	@Override
+	public void adjustFontSize(final int increment) {
+		screenBuffer.adjustFontSize(increment);
+		// force repaint
+		if(paintingArea!=null)
+			screenBuffer.resize(paintingArea.getWidth(), paintingArea.getHeight());
+	}
+
 	private class ScreenBuffer {
-		/** Immutable Datastructure used to hold Font related values. */
+		private final String fontName=Font.MONOSPACED;
+		private final int fontStyle=Font.PLAIN;
+		private int fontSize=15;
+
+		/** Immutable structure used to hold Font related values. */
 		private FontData fontData;
 
-		/** Lock used to synchronize acess to image. */
+		/** Lock used to synchronize access to image. */
 		private final Object imageLock=new Object();
 		/** The image buffer, initial dummy */
 		private BufferedImage image=new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
@@ -212,7 +232,14 @@ public class AwtView implements View {
 		private int sizeLines=0;
 
 		ScreenBuffer() {
-			setFont(new Font(Font.MONOSPACED, Font.PLAIN, 15));
+			setFont(new Font(fontName, fontStyle, fontSize));
+		}
+
+		public void adjustFontSize(final int increment) {
+			if(fontSize+increment>0) {
+				fontSize+=increment;
+				setFont(new Font(fontName, fontStyle, fontSize));
+			}
 		}
 
 		public void setFont(final Font font) {
@@ -236,13 +263,13 @@ public class AwtView implements View {
 				final BufferedImage newImage=new BufferedImage(
 						newSizeColumns*fontData.colWidht, newSizeLines*fontData.lineHeight, BufferedImage.TYPE_INT_RGB);
 				final Graphics2D g=newImage.createGraphics();
-			    if(g instanceof Graphics2D)
-			    {
-			        final Graphics2D g2d = g;
-			        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-			        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-			        g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED);
-			    }
+				if(g instanceof Graphics2D)
+				{
+					final Graphics2D g2d = g;
+					g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+					g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+					g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED);
+				}
 				g.setColor(COLOR_BACKGROUND);
 				g.fillRect(0, 0, newImage.getWidth(), newImage.getHeight());
 

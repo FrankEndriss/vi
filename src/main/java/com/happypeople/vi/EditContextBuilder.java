@@ -95,6 +95,11 @@ public class EditContextBuilder {
 				// TODO implement a tracker which knows when to exit the application, iE after close of the last EditContext or the like
 				System.exit(0);
 			}
+
+			@Override
+			public View getView() {
+				return view;
+			}
 		};
 	}
 }

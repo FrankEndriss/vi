@@ -19,6 +19,7 @@ import com.happypeople.vi.exparser.ExParser;
  * The affected models are a LinesModelEditor and a CursorModel.
  * Additionally one can add a listener to be called when the editor mode
  * changes, like from command mode to edit mode.
+ * Usually a ViController is part of an EditContext, one to one.
  */
 @Component
 @Scope("prototype")
@@ -77,16 +78,33 @@ public class ViController implements KeyTypedController {
 		private final Logger log=LoggerFactory.getLogger(ModeStrategy_VI_MODE.class);
 		@Override
 		public ModeStrategy keyTyped(final KeyEvent keyEvent, final EditContext editContext) {
-			final char c=keyEvent.getKeyChar();
-			log.info("command char: "+keyEvent.getKeyChar());
-			switch(c)  {
-				// Simple cursor movement
+			log.info("keyEvent: "+keyEvent);
+			log.info("getKeyCode(): "+keyEvent.getKeyCode());
+			log.info("getKeyChar(): "+keyEvent.getKeyChar());
+			log.info("isConrolDown(): "+keyEvent.isControlDown());
+
+			final int keyCode=keyEvent.getKeyCode();
+			if(keyCode==KeyEvent.VK_UNDEFINED) {
+				// TODO remove this switches in favor of a HashMap of keyEvent-processors.
+				// The key into that map should be created by the info in keyEvent.
+				// The keyEvent-processors should include printable documentation and be "human readable Serializable".
+				// So, the list of processors is the key-mapping of the application.
+				final char keyChar=keyEvent.getKeyChar();
+				switch(keyChar) {
 				case 'h':	cursorModel.moveCursorLeft(1); break;
 				case 'j':	cursorModel.moveCursorUp(-1); break;
 				case 'k':	cursorModel.moveCursorUp(1); break;
 				case 'l':	cursorModel.moveCursorLeft(-1); break;
 				case ':':	return inputModeStrategy_EX_MODE;
-				default: System.out.println("ignored keyTyped: "+keyEvent);
+				default: System.out.println("ignored keyEvent: "+keyEvent);
+				}
+
+			} else {
+				switch(keyCode)  {
+				case KeyEvent.VK_PLUS:	if(keyEvent.isControlDown()) editContext.getView().adjustFontSize(1); break;
+				case KeyEvent.VK_MINUS:	if(keyEvent.isControlDown()) editContext.getView().adjustFontSize(-1); break;
+				default: System.out.println("ignored keyEvent: "+keyEvent);
+				}
 			}
 			return this;
 		}

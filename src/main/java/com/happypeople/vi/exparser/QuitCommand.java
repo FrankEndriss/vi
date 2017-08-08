@@ -12,7 +12,6 @@ public class QuitCommand extends AbstractExCommand {
 	@Override
 	public int execute(final EditContext editContext) {
 		editContext.close();
-		throw new RuntimeException("not implemented yet");
+		return ExCommand.SUCCESS;
 	}
-
 }

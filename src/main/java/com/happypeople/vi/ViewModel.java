@@ -39,28 +39,29 @@ public interface ViewModel extends ViewSizeChangedEventListener {
 	 */
 	public boolean scrollUp(long scrollUpLines);
 
-    void addFirstLineChangedEventListener(ViewModelChangedEventListener listener);
+	void addFirstLineChangedEventListener(ViewModelChangedEventListener listener);
 
-     /** The method gets a logical cursor position, and returns the position in the LinesModel.
-      * TODO check if really needed public
-     * @param cpos Cursor position in view
-     * @return calculated cursor position in data model
+	/** The method gets a logical cursor position, and returns the position in the LinesModel.
+	 * TODO check if really needed public
+	 * @param cpos Cursor position in view
+	 * @return calculated cursor position in data model
     DataCursorPosition getDataPositionFromViewPosition(ViewCursorPosition cpos);
-     */
+	 */
 
-    /** The method gets a logical cursor position, and returns the position on screen.
-     * iE if all lines are shorter than the screen width, and every character
-     * occupies one columns, then the positios are the same.
-     * But there are long lines, and tabulators.
-      * TODO check if really needed public
-     * @param cpos Cursor position in view
-     * @return calculated cursor position in data model
-     */
-    ScreenCursorPosition getScreenPositionFromViewPosition(ViewCursorPosition cpos);
+	/** The method gets a logical cursor position, and returns the position on screen.
+	 * iE if all lines are shorter than the screen width, and every character
+	 * occupies one columns, then the positios are the same.
+	 * But there are long lines, and tabulators.
+	 * TODO check if really needed public
+	 * @param cpos Cursor position in view
+	 * @return calculated cursor position in data model
+	 */
+	ScreenCursorPosition getScreenPositionFromViewPosition(ViewCursorPosition cpos);
 
 	/**
 	 * @return the index of the last logical line visible on screen
 	 */
 	public long getMaxLogicalScreenLineIdx();
 
+	public void forceRepaint();
 }

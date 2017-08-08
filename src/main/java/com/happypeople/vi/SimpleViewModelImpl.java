@@ -122,7 +122,7 @@ public class SimpleViewModelImpl implements ViewModel {
 		// Tabulators occupy more than one column can be ignored here
 		return new DataCursorPosition(cpos.getX(), cpos.getY()+firstLine);
 	}
-	*/
+	 */
 
 	@Override
 	public ScreenCursorPosition getScreenPositionFromViewPosition(final ViewCursorPosition cpos) {
@@ -186,6 +186,11 @@ public class SimpleViewModelImpl implements ViewModel {
 
 		cursorPositionChanged(newPos);
 		return newPos;
+	}
+
+	@Override
+	public void forceRepaint() {
+		screenModel.forceRepaint();
 	}
 
 }

@@ -146,4 +146,9 @@ public class ScreenModelImpl implements ScreenModel {
 		return currentMessage;
 	}
 
+	@Override
+	public void forceRepaint() {
+		fireChanged();
+	}
+
 }

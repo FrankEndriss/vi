@@ -25,4 +25,9 @@ public interface View extends ScreenModelChangedEventListener {
 	 */
 	public void setVisible(boolean visible);
 
+	/** Makes the used Font bigger or smaller by adding increment to the current size.
+	 * The result of the addition must be gt 0.
+	 * @param increment Font size increment
+	 */
+	public void adjustFontSize(final int increment);
 }
