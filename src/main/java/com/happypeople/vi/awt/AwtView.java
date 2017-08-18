@@ -208,8 +208,10 @@ public class AwtView implements View {
 	public void adjustFontSize(final int increment) {
 		screenBuffer.adjustFontSize(increment);
 		// force repaint
-		if(paintingArea!=null)
+		if(paintingArea!=null) {
 			screenBuffer.resize(paintingArea.getWidth(), paintingArea.getHeight());
+			screenBuffer.render(new ScreenModelChangedEvent(null));
+		}
 	}
 
 	private class ScreenBuffer {
@@ -230,6 +232,7 @@ public class AwtView implements View {
 		private int sizeColumns=0;
 		/** Size in lines, not pixels. */
 		private int sizeLines=0;
+		private ScreenModel lastUsedScreenModel;
 
 		ScreenBuffer() {
 			setFont(new Font(fontName, fontStyle, fontSize));
@@ -247,6 +250,7 @@ public class AwtView implements View {
 			final Graphics2D g=tmpImage.createGraphics();
 			final FontData fontData=new FontData();
 			fontData.font=font;
+			g.setFont(font);
 			fontData.fontMetrics=g.getFontMetrics(font);
 			fontData.lineHeight=Math.max(1, fontData.fontMetrics.getHeight());
 			fontData.colWidht=Math.max(1, fontData.fontMetrics.stringWidth("0123456789abcdef")/16);
@@ -259,7 +263,7 @@ public class AwtView implements View {
 			final int newSizeLines=Math.max(1, height/fontData.lineHeight);
 
 			if(newSizeColumns!=sizeColumns || newSizeLines!=sizeLines) {
-				log.info("really resize, cols/width="+newSizeColumns+" lines/height="+newSizeLines);
+				log.info("realy resize, cols/width="+newSizeColumns+" lines/height="+newSizeLines);
 				final BufferedImage newImage=new BufferedImage(
 						newSizeColumns*fontData.colWidht, newSizeLines*fontData.lineHeight, BufferedImage.TYPE_INT_RGB);
 				final Graphics2D g=newImage.createGraphics();
@@ -270,6 +274,7 @@ public class AwtView implements View {
 					g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 					g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED);
 				}
+				g.setFont(fontData.font);
 				g.setColor(COLOR_BACKGROUND);
 				g.fillRect(0, 0, newImage.getWidth(), newImage.getHeight());
 
@@ -286,6 +291,8 @@ public class AwtView implements View {
 					sizeLines=newSizeLines;
 				}
 			}
+
+			// need to invalidate/render here
 		}
 
 		/** This methods simply paints the buffer image to target.
@@ -344,7 +351,17 @@ public class AwtView implements View {
 		}
 
 		public void render(final ScreenModelChangedEvent evt) {
-			final ScreenModel screenModel=evt.getSource();
+			ScreenModel screenModel=evt.getSource();
+			if(screenModel!=null)
+				this.lastUsedScreenModel=screenModel;
+			else
+				screenModel=lastUsedScreenModel;
+
+			if(screenModel==null) {
+				log.warn("no ScreenModel available, at:", new RuntimeException("warning"));
+				return;
+			}
+
 			sPos=screenModel.getCursorPosition();
 
 			g.setFont(fontData.font);

@@ -28,12 +28,12 @@ public class ExParserTest {
 	@Test
 	public void testNumber() throws ParseException {
 		final String[] numberstrings=new String[] {
-			"123",
-			"0",
-			"1",
-			"9",
-			"17",
-			""+Long.MAX_VALUE
+				"123",
+				"0",
+				"1",
+				"9",
+				"17",
+				""+Long.MAX_VALUE
 		};
 		for(final String s : numberstrings) {
 			final ExParser parser=new ExParser(new StringReader(s));
@@ -44,13 +44,13 @@ public class ExParserTest {
 	@Test
 	public void testFailNumber() throws ParseException {
 		final String[] failNumberstrings=new String[] {
-			// "0123",
-			"",
-			"x",
-			"x9",
-			// "17x",
-			// "123142256546562353 63265636",
-			// "00"
+				// "0123",
+				"",
+				"x",
+				"x9",
+				// "17x",
+				// "123142256546562353 63265636",
+				// "00"
 		};
 		for(final String s : failNumberstrings) {
 			try {
@@ -92,11 +92,11 @@ public class ExParserTest {
 	@Test
 	public void testCopyCmd() throws ParseException {
 		for(final String s : Arrays.asList(
-			"1,$co200",
-			"1,200co0",
-			"123co.",
-			"co."
-			))
+				"1,$co200",
+				"1,200co0",
+				"123co.",
+				"co."
+				))
 		{
 			System.out.println("checking: "+s);
 			final ExCommand exCommand=testExCommand(s);
@@ -106,12 +106,12 @@ public class ExParserTest {
 	@Test
 	public void testDeleteCmd() throws ParseException {
 		for(final String s : Arrays.asList(
-			"1,$d",
-			".,.+3d\"a",
-			"d200",
-			"200d30",
-			"d"
-			))
+				"1,$d",
+				".,.+3d\"a",
+				"d200",
+				"200d30",
+				"d"
+				))
 		{
 			System.out.println("checking: "+s);
 			final ExCommand exCommand=testExCommand(s);
@@ -120,21 +120,38 @@ public class ExParserTest {
 	}
 
 	@Test
+	public void testQuitCmd() throws ParseException {
+		for(final String s : Arrays.asList(
+				"q",
+				"qu",
+				"qui",
+				"quit!",
+				"q!"
+				))
+		{
+			System.out.println("checking: "+s);
+			final List<ExCommand> exCommands=testExCommandLine(s);
+			assertEquals("len of command list", 1, exCommands.size());
+			assertTrue("should be QuitCommand", exCommands.get(0) instanceof QuitCommand);
+		}
+	}
+
+	@Test
 	public void testWriteCmd() throws ParseException {
 		for(final String s : Arrays.asList(
-			"w",
-			"wq",
-			"w!",
-			"wq!",
-			"w /tmp/bla.f",
-			"w! /tmp/bla.f",
-			"wq /tmp/bla.f",
-			"wq! /tmp/bla.f",
-			"1,100w /tmp/bla.f",
-			"37wq! /tmp/bla.f",
-			"%wq! /tmp/bla.f",
-			"12,+1++-wq! /tmp/bla.f"
-			))
+				"w",
+				"wq",
+				"w!",
+				"wq!",
+				"w /tmp/bla.f",
+				"w! /tmp/bla.f",
+				"wq /tmp/bla.f",
+				"wq! /tmp/bla.f",
+				"1,100w /tmp/bla.f",
+				"37wq! /tmp/bla.f",
+				"%wq! /tmp/bla.f",
+				"12,+1++-wq! /tmp/bla.f"
+				))
 		{
 			System.out.println("checking: "+s);
 			final ExCommand exCommand=testExCommand(s);

@@ -121,6 +121,7 @@ public class ViController implements KeyTypedController {
 		@Override
 		public ModeStrategy keyTyped(final KeyEvent keyEvent, final EditContext editContext) {
 			if(keyEvent.getKeyChar()=='\n') {
+				log.info("executing cmdLind: "+cmdStringBuilder);
 				try {
 					exParser.ReInit(new StringReader(cmdStringBuilder.toString()));
 					final List<ExCommand> commands=exParser.exCommandLine();
@@ -132,11 +133,11 @@ public class ViController implements KeyTypedController {
 					cmdStringBuilder.setLength(0);
 				}
 				return inputModeStrategy_Vi_MODE;
-			} else {
+			} else if(keyEvent.getKeyCode()==KeyEvent.VK_UNDEFINED) { // keyTyped event
 				cmdStringBuilder.append(keyEvent.getKeyChar());
 				editContext.getMessageTarget().showMessage(":"+cmdStringBuilder);
-				return this;
 			}
+			return this;
 			// TODO
 			// - exit/clear cmdStringBuilder on ESC
 			// - display a cursor in message/edit line
